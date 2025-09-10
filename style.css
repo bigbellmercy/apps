@@ -4,86 +4,73 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #f0f0f0;
+    background-color: #e0f2f7; /* 밝은 파스텔톤 배경 */
     margin: 0;
-}
-
-.container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-h1 {
     color: #333;
 }
 
+.container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+}
+
+h1 {
+    color: #2c3e50; /* 진한 파란색 제목 */
+    margin-bottom: 25px;
+    font-size: 2.2em;
+}
+
 .button-group {
-    margin: 20px 0;
+    margin: 25px 0;
+    display: flex;
+    flex-direction: column; /* 버튼을 세로로 정렬 */
+    gap: 15px; /* 버튼 사이 간격 */
 }
 
 .sound-button {
-    background-color: #007bff;
+    background-color: #3498db; /* 파란색 버튼 */
     color: white;
-    padding: 15px 30px;
-    margin: 10px;
+    padding: 18px 25px;
     border: none;
-    border-radius: 5px;
-    font-size: 18px;
+    border-radius: 8px;
+    font-size: 1.2em;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    width: 100%; /* 너비를 컨테이너에 맞춤 */
+    box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
 }
 
 .sound-button:hover {
-    background-color: #0056b3;
+    background-color: #2980b9; /* 호버 시 약간 어두워짐 */
+    transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
 }
 
-.recording-section {
-    margin-top: 30px;
-    border-top: 1px solid #eee;
-    padding-top: 20px;
+.sound-button:active {
+    transform: translateY(0); /* 클릭 시 원위치 */
+    background-color: #1a608a; /* 클릭 시 더 어두워짐 */
 }
 
-.recording-section h2 {
-    color: #555;
+p {
+    color: #7f8c8d;
+    margin-top: 20px;
+    font-size: 1em;
 }
 
-#recordTarget,
-#recordButton,
-#stopButton {
-    padding: 10px 15px;
-    margin: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-#recordButton {
-    background-color: #28a745;
-    color: white;
-    border-color: #28a745;
-}
-
-#recordButton:hover {
-    background-color: #218838;
-}
-
-#stopButton {
-    background-color: #dc3545;
-    color: white;
-    border-color: #dc3545;
-}
-
-#stopButton:hover {
-    background-color: #c82333;
-}
-
-#stopButton:disabled {
-    background-color: #e0e0e0;
-    color: #666;
-    border-color: #e0e0e0;
-    cursor: not-allowed;
+/* 모바일 기기 반응형 조정 */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 1.8em;
+    }
+    .sound-button {
+        font-size: 1em;
+        padding: 15px 20px;
+    }
+    .container {
+        padding: 20px;
+    }
 }

@@ -1,103 +1,51 @@
+// 버튼 요소 가져오기
 const button1 = document.getElementById('button1');
 const button2 = document.getElementById('button2');
 const button3 = document.getElementById('button3');
-const recordTarget = document.getElementById('recordTarget');
-const recordButton = document.getElementById('recordButton');
-const stopButton = document.getElementById('stopButton');
-const playback = document.getElementById('playback');
 
-let audioContext;
-let mediaRecorder;
-let recordedChunks = [];
-let soundFiles = {
-    sound1: null,
-    sound2: null,
-    sound3: null
+// 오디오 파일 경로 정의
+const soundPaths = {
+    sound1: 'sound1.mp3', // 이 파일은 index.html과 같은 폴더에 있어야 합니다.
+    sound2: 'sound2.mp3',
+    sound3: 'sound3.mp3'
 };
 
-// 미리 녹음된 음성 (예시 - 실제 앱에서는 사용자가 녹음하거나 초기 음성을 제공할 수 있습니다)
-// 실제로는 오디오 파일을 서버에 저장하거나 IndexedDB 같은 클라이언트 측 저장소를 사용해야 합니다.
-// 여기서는 간단한 예시를 위해 null로 초기화합니다.
-// soundFiles.sound1 = new Audio('path/to/your/default/sound1.mp3');
-// soundFiles.sound2 = new Audio('path/to/your/default/sound2.mp3');
-// soundFiles.sound3 = new Audio('path/to/your/default/sound3.mp3');
-
+// 각 사운드를 위한 Audio 객체 생성 (미리 로드하여 재생 지연을 줄임)
+// Audio 객체는 한 번 생성되면 재사용할 수 있습니다.
+const audioElements = {
+    sound1: new Audio(soundPaths.sound1),
+    sound2: new Audio(soundPaths.sound2),
+    sound3: new Audio(soundPaths.sound3)
+};
 
 // 사운드 재생 함수
 function playSound(soundId) {
-    if (soundFiles[soundId]) {
-        if (soundFiles[soundId].src) { // Audio 객체 또는 Blob URL이 있는 경우
-            const audio = new Audio(soundFiles[soundId].src);
-            audio.play();
-        } else if (soundFiles[soundId] instanceof Audio) { // 미리 생성된 Audio 객체인 경우
-            soundFiles[soundId].currentTime = 0; // 처음부터 재생
-            soundFiles[soundId].play();
-        }
+    const audio = audioElements[soundId];
+    if (audio) {
+        // 현재 재생 중인 경우 정지하고 처음부터 다시 재생
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play().catch(error => {
+            console.error(`Error playing sound ${soundId}:`, error);
+            // 아이폰에서 자동 재생 정책으로 인해 초기 재생이 안 될 수 있습니다.
+            // 사용자 상호작용(클릭) 후에만 Audio.play()가 허용될 수 있습니다.
+            alert(`사운드 ${soundId} 재생에 실패했습니다. 브라우저 정책을 확인해주세요.`);
+        });
     } else {
-        alert('이 버튼에 녹음된 사운드가 없습니다!');
+        console.error(`Sound file for ${soundId} not found or not loaded.`);
+        alert(`사운드 ${soundId} 파일을 로드할 수 없습니다.`);
     }
 }
 
+// 각 버튼에 클릭 이벤트 리스너 추가
 button1.addEventListener('click', () => playSound('sound1'));
 button2.addEventListener('click', () => playSound('sound2'));
 button3.addEventListener('click', () => playSound('sound3'));
 
-// 녹음 시작
-recordButton.addEventListener('click', async () => {
-    try {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        recordedChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-            const audioUrl = URL.createObjectURL(blob);
-            const targetSound = recordTarget.value;
-
-            // 해당 버튼에 녹음된 사운드 할당
-            soundFiles[targetSound] = new Audio(audioUrl);
-            alert(`${targetSound}에 사운드가 성공적으로 녹음되었습니다!`);
-
-            // 스트림 정지
-            stream.getTracks().forEach(track => track.stop());
-
-            // 녹음 후 재생할 수 있도록 설정 (선택 사항)
-            playback.src = audioUrl;
-            playback.style.display = 'block';
-
-            recordButton.disabled = false;
-            stopButton.disabled = true;
-        };
-
-        mediaRecorder.start();
-        recordButton.disabled = true;
-        stopButton.disabled = false;
-        alert('녹음 시작! 음성을 말하세요...');
-
-    } catch (err) {
-        console.error('녹음 접근 중 오류 발생:', err);
-        alert('마이크 접근을 허용해야 녹음할 수 있습니다.');
-    }
-});
-
-// 녹음 중지
-stopButton.addEventListener('click', () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-    }
-});
-
-// 아이폰에서 웹 앱처럼 보이게 하기 위한 메타 태그 (선택 사항)
-// <meta name="apple-mobile-web-app-capable" content="yes">
-// <meta name="apple-mobile-web-app-status-bar-style" content="black">
-// <link rel="apple-touch-icon" href="icon.png"> (아이콘 파일 추가)
+// 추가: 오디오 로드 실패 시 콘솔에 경고 표시
+for (const key in audioElements) {
+    audioElements[key].addEventListener('error', (e) => {
+        console.error(`Failed to load audio for ${key}:`, e);
+        alert(`오디오 파일 ${soundPaths[key]}을(를) 로드하는 데 실패했습니다.`);
+    });
+}
