@@ -41,12 +41,11 @@
             const url = `https://api.smartthings.com/v1/devices/${deviceId}/commands`;
             let body = {};
 
-            // SmartThings TV 기본 명령에 맞게 command와 capability 설정
             if (command === 'Power') {
                 body = {
                     commands: [{
                         capability: 'switch',
-                        command: arg    // 'on' 또는 'off'
+                        command: arg
                     }]
                 };
             } else if (command === 'volumeUp') {
@@ -64,16 +63,17 @@
                     }]
                 };
             } else if (command === 'channelUp') {
+                // 채널 제어 명령어 변경 시도
                 body = {
                     commands: [{
-                        capability: 'audioChannel',
+                        capability: 'tvChannel',
                         command: 'channelUp'
                     }]
                 };
             } else if (command === 'channelDown') {
                 body = {
                     commands: [{
-                        capability: 'audioChannel',
+                        capability: 'tvChannel',
                         command: 'channelDown'
                     }]
                 };
