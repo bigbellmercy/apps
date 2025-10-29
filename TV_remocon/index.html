@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Samsung TV Remote Control</title>
+    <style>
+        label { display:block; margin-top:15px; }
+        input { width: 300px; }
+        button { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h2>Samsung TV 원격 조작 (개인 토큰/디바이스ID 입력 방식)</h2>
+
+    <label>
+        개인 접근 토큰:
+        <input type="text" id="accessToken" placeholder="SmartThings Personal Access Token">
+    </label>
+    <label>
+        디바이스 ID:
+        <input type="text" id="deviceId" placeholder="장모님 TV Device ID">
+    </label>
+
+    <div style="margin-top:15px;">
+        <button onclick="sendCommand('Power', 'on')">전원 켜기</button>
+        <button onclick="sendCommand('Power', 'off')">전원 끄기</button>
+        <button onclick="sendCommand('volumeUp', null)">볼륨 올리기</button>
+        <button onclick="sendCommand('volumeDown', null)">볼륨 내리기</button>
+        <button onclick="sendCommand('channelUp', null)">채널 올리기</button>
+        <button onclick="sendCommand('channelDown', null)">채널 내리기</button>
+    </div>
+
+    <script>
+        function sendCommand(command, arg) {
+            const accessToken = document.getElementById('accessToken').value.trim();
+            const deviceId = document.getElementById('deviceId').value.trim();
+            if (!accessToken || !deviceId) {
+                alert('토큰과 디바이스ID를 모두 입력해주세요.');
+                return;
+            }
+
+            const url = `https://api.smartthings.com/v1/devices/${deviceId}/commands`;
+            let body = {};
+
+            // SmartThings TV 기본 명령에 맞게 command와 capability 설정
+            if (command === 'Power') {
+                body = {
+                    commands: [{
+                        capability: 'switch',
+                        command: arg    // 'on' 또는 'off'
+                    }]
+                };
+            } else if (command === 'volumeUp') {
+                body = {
+                    commands: [{
+                        capability: 'audioVolume',
+                        command: 'volumeUp'
+                    }]
+                };
+            } else if (command === 'volumeDown') {
+                body = {
+                    commands: [{
+                        capability: 'audioVolume',
+                        command: 'volumeDown'
+                    }]
+                };
+            } else if (command === 'channelUp') {
+                body = {
+                    commands: [{
+                        capability: 'audioChannel',
+                        command: 'channelUp'
+                    }]
+                };
+            } else if (command === 'channelDown') {
+                body = {
+                    commands: [{
+                        capability: 'audioChannel',
+                        command: 'channelDown'
+                    }]
+                };
+            }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert(`${command} 명령이 성공적으로 전송되었습니다.`);
+                } else {
+                    response.text().then(text => alert(`명령 실패: ${text}`));
+                }
+            })
+            .catch(error => alert('오류: ' + error.message));
+        }
+    </script>
+</body>
+</html>
