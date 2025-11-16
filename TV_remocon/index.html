@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Samsung TV Remote Control - Advanced</title>
+    <title>Samsung TV Remote - API Deep Analysis</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -13,7 +13,7 @@
         }
         
         .container { 
-            max-width: 500px; 
+            max-width: 600px; 
             margin: 0 auto; 
         }
         
@@ -28,12 +28,7 @@
             margin-bottom: 5px;
         }
         
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .settings-box {
+        .settings-box, .control-box {
             background: white;
             border-radius: 15px;
             padding: 20px;
@@ -41,11 +36,13 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         
-        .settings-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 15px;
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
             color: #333;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         label {
@@ -78,9 +75,10 @@
         
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 150px;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: 11px;
+            overflow-y: auto;
         }
         
         .button-row {
@@ -94,7 +92,7 @@
             padding: 12px;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -113,6 +111,15 @@
             box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
         
+        .test-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .test-btn:hover {
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+        
         .clear-btn {
             background-color: #f44336;
             color: white;
@@ -120,108 +127,6 @@
         
         .clear-btn:hover {
             box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
-        }
-        
-        .refresh-btn {
-            background-color: #2196F3;
-            color: white;
-        }
-        
-        .refresh-btn:hover {
-            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
-        }
-        
-        .control-box {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .button-group.single {
-            grid-template-columns: 1fr;
-        }
-        
-        .control-btn {
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            color: white;
-        }
-        
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .control-btn:active {
-            transform: translateY(0);
-        }
-        
-        .btn-power { background: linear-gradient(135deg, #FF6B6B, #FF5252); }
-        .btn-volume { background: linear-gradient(135deg, #4ECDC4, #44A08D); }
-        .btn-channel { background: linear-gradient(135deg, #FFA726, #FF7043); }
-        .btn-playback { background: linear-gradient(135deg, #F38181, #E86B6B); }
-        .btn-nav { background: linear-gradient(135deg, #AA96DA, #8B7DB8); }
-        .btn-menu { background: linear-gradient(135deg, #FCBAD3, #FB9DC1); }
-        .btn-home { background: linear-gradient(135deg, #A8D8EA, #7EC8E3); }
-        .btn-app { background: linear-gradient(135deg, #66BB6A, #43A047); }
-        
-        .remote-pad {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .arrow-row {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        .arrow-btn {
-            width: 60px;
-            height: 60px;
-            border: none;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            background: linear-gradient(135deg, #AA96DA, #8B7DB8);
-            color: white;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .arrow-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .arrow-btn:active {
-            transform: translateY(0);
         }
         
         .status {
@@ -235,7 +140,7 @@
             font-size: 14px;
             font-weight: 600;
             animation: slideUp 0.3s ease-out;
-            max-width: 460px;
+            max-width: 560px;
             margin: 0 auto;
             z-index: 1000;
         }
@@ -259,46 +164,32 @@
             color: white;
         }
         
-        .device-info {
+        .api-response {
             background-color: #f5f5f5;
             border-left: 4px solid #2196F3;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 12px;
             border-radius: 4px;
-            font-size: 12px;
-            color: #666;
+            font-size: 11px;
             max-height: 200px;
             overflow-y: auto;
         }
         
-        .app-list {
-            background-color: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 12px;
-            max-height: 150px;
-            overflow-y: auto;
+        .api-response.error {
+            border-left-color: #f44336;
+            background-color: #ffebee;
         }
         
-        .app-item {
-            padding: 8px;
-            margin: 4px 0;
-            background-color: white;
-            border-radius: 4px;
-            font-size: 12px;
-            border-left: 3px solid #2196F3;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .app-item:hover {
-            background-color: #e3f2fd;
-        }
-        
-        .app-item.success {
+        .api-response.success {
             border-left-color: #4CAF50;
             background-color: #e8f5e9;
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
         }
         
         @keyframes slideUp {
@@ -311,138 +202,111 @@
                 opacity: 1;
             }
         }
-        
-        @media (max-width: 480px) {
-            .container { max-width: 100%; }
-            .header h1 { font-size: 28px; }
-            .control-btn { padding: 12px; font-size: 12px; }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📺 TV 리모컨</h1>
-            <p>Samsung Smart TV 원격 조작 (Advanced)</p>
+            <h1>📺 SmartThings API Analysis</h1>
+            <p>REST API로 TV 앱 정보 조회</p>
         </div>
 
         <!-- 설정 섹션 -->
         <div class="settings-box">
-            <div class="settings-title">⚙️ 설정</div>
+            <div class="section-title">⚙️ API 설정</div>
             
-            <label>개인 접근 토큰</label>
-            <input type="text" id="accessToken" placeholder="SmartThings Personal Access Token">
+            <label>Personal Access Token</label>
+            <input type="password" id="accessToken" placeholder="https://account.smartthings.com/tokens">
 
-            <label>디바이스 ID</label>
+            <label>Device ID</label>
             <input type="text" id="deviceId" placeholder="TV Device ID">
 
             <div class="button-row">
-                <button class="save-btn" onclick="saveSettings()">저장하기</button>
+                <button class="save-btn" onclick="saveSettings()">저장</button>
                 <button class="clear-btn" onclick="clearSettings()">초기화</button>
             </div>
         </div>
 
-        <!-- Capabilities 조회 및 앱 자동 감지 -->
+        <!-- API 엔드포인트 테스트 -->
         <div class="control-box">
-            <div class="section-title">📱 TV 능력 및 앱 감지</div>
-            <div class="button-group single">
-                <button class="control-btn refresh-btn" onclick="detectCapabilitiesAndApps()">📡 TV 분석 시작</button>
-            </div>
-            <div id="capabilitiesContainer"></div>
-            <div id="appsContainer"></div>
-        </div>
-
-        <!-- 커스텀 앱 추가 -->
-        <div class="control-box">
-            <div class="section-title">🎬 앱 수동 추가</div>
-            <label>앱 이름</label>
-            <input type="text" id="customAppName" placeholder="예: Wavve" />
+            <div class="section-title">🔗 REST API 엔드포인트 테스트</div>
             
-            <label>앱 ID (또는 package name)</label>
-            <input type="text" id="customAppId" placeholder="예: wavve 또는 package ID" />
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">
+                ⚠️ SmartThings API는 설치된 앱 목록을 직접 반환하지 않습니다. 다음 엔드포인트로 TV 상태를 조회하고 분석합니다.
+            </p>
             
             <div class="button-row">
-                <button class="save-btn" onclick="addCustomApp()">앱 추가</button>
-                <button class="refresh-btn" onclick="testAppLaunch()">선택 앱 실행</button>
+                <button class="test-btn" onclick="testDevicesList()">1️⃣ /devices 조회</button>
+                <button class="test-btn" onclick="testDeviceDetail()">2️⃣ /devices/{id} 조회</button>
             </div>
             
-            <label>추가된 앱 목록</label>
-            <select id="appSelect" style="margin-bottom: 12px;">
-                <option value="">-- 앱을 선택하세요 --</option>
+            <div class="button-row">
+                <button class="test-btn" onclick="testDeviceStatus()">3️⃣ /status 조회</button>
+                <button class="test-btn" onclick="testComponents()">4️⃣ Components 조회</button>
+            </div>
+            
+            <label style="margin-top: 20px;">API 응답 결과</label>
+            <div id="apiResponse" class="api-response">응답이 여기에 표시됩니다</div>
+        </div>
+
+        <!-- 설치 앱 감지 시뮬레이션 -->
+        <div class="control-box">
+            <div class="section-title">📱 앱 ID 테스트</div>
+            
+            <label>테스트할 앱 ID (쉼표로 구분)</label>
+            <textarea id="appIdsToTest" placeholder="wavve,3201907018807,111299001912,3201910019365">wavve
+3201907018807
+111299001912
+3201910019365
+3201602006622
+3201601007230
+3201706022396
+3201704003368
+3201707016433</textarea>
+            
+            <div class="button-row">
+                <button class="test-btn" onclick="testAppsSequentially()">순차 테스트 시작</button>
+                <button class="clear-btn" onclick="clearTestResults()">결과 초기화</button>
+            </div>
+            
+            <label>테스트 결과</label>
+            <textarea id="testResults" readonly style="background-color: #f9f9f9;"></textarea>
+        </div>
+
+        <!-- 커스텀 명령 -->
+        <div class="control-box">
+            <div class="section-title">⚡ 커스텀 API 호출</div>
+            
+            <label>엔드포인트 (예: /devices/{deviceId}/commands)</label>
+            <input type="text" id="customEndpoint" placeholder="/devices/{deviceId}/commands">
+            
+            <label>HTTP 메서드</label>
+            <select id="httpMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
             </select>
-            <div class="button-group single">
-                <button class="control-btn btn-app" onclick="launchSelectedApp()">선택한 앱 실행</button>
-            </div>
-        </div>
-
-        <!-- 기본 명령 -->
-        <div class="control-box">
-            <div class="section-title">🔌 기본 명령</div>
-            <div class="button-group">
-                <button class="control-btn btn-power" onclick="sendCommand('Power', 'on')">전원 켜기</button>
-                <button class="control-btn btn-power" onclick="sendCommand('Power', 'off')">전원 끄기</button>
-            </div>
-            <div class="button-group">
-                <button class="control-btn btn-volume" onclick="sendCommand('volumeUp', null)">🔊 볼륨 올리기</button>
-                <button class="control-btn btn-volume" onclick="sendCommand('volumeDown', null)">🔉 볼륨 내리기</button>
-            </div>
-            <div class="button-group single">
-                <button class="control-btn btn-volume" onclick="sendCommand('mute', null)">🔇 음소거</button>
-            </div>
-            <div class="button-group">
-                <button class="control-btn btn-channel" onclick="sendCommand('channelUp', null)">📺 채널 올리기</button>
-                <button class="control-btn btn-channel" onclick="sendCommand('channelDown', null)">📻 채널 내리기</button>
-            </div>
-        </div>
-
-        <!-- 재생 제어 -->
-        <div class="control-box">
-            <div class="section-title">▶️ 재생 제어</div>
-            <div class="button-group">
-                <button class="control-btn btn-playback" onclick="sendCommand('play', null)">재생</button>
-                <button class="control-btn btn-playback" onclick="sendCommand('pause', null)">일시정지</button>
-            </div>
-            <div class="button-group single">
-                <button class="control-btn btn-playback" onclick="sendCommand('stop', null)">정지</button>
-            </div>
-        </div>
-
-        <!-- 리모컨 네비게이션 -->
-        <div class="control-box">
-            <div class="section-title">🎮 네비게이션</div>
             
-            <div class="remote-pad">
-                <div class="arrow-row">
-                    <button class="arrow-btn" onclick="remoteKey('UP')">▲</button>
-                </div>
-                <div class="arrow-row">
-                    <button class="arrow-btn" onclick="remoteKey('LEFT')">◀</button>
-                    <button class="arrow-btn" onclick="remoteKey('OK')" style="background: linear-gradient(135deg, #FFB347, #FFA500);">✓</button>
-                    <button class="arrow-btn" onclick="remoteKey('RIGHT')">▶</button>
-                </div>
-                <div class="arrow-row">
-                    <button class="arrow-btn" onclick="remoteKey('DOWN')">▼</button>
-                </div>
-            </div>
-
-            <div class="button-group">
-                <button class="control-btn btn-menu" onclick="remoteKey('BACK')">뒤로</button>
-                <button class="control-btn btn-menu" onclick="remoteKey('MENU')">메뉴</button>
-            </div>
-            <div class="button-group single">
-                <button class="control-btn btn-home" onclick="remoteKey('HOME')" style="font-size: 16px; font-weight: 700;">🏠 홈</button>
-            </div>
-            <div class="button-group single">
-                <button class="control-btn btn-menu" onclick="remoteKey('EXIT')">종료</button>
+            <label>Request Body (JSON)</label>
+            <textarea id="customBody" style="min-height: 100px;">{
+  "commands": [{
+    "capability": "custom.launchapp",
+    "command": "launchApp",
+    "arguments": ["wavve"]
+  }]
+}</textarea>
+            
+            <div class="button-row">
+                <button class="test-btn" onclick="sendCustomRequest()">전송</button>
             </div>
         </div>
 
         <!-- 디버그 정보 -->
         <div class="control-box">
-            <div class="section-title">🔧 디버그 정보</div>
-            <label>API 응답 로그</label>
-            <textarea id="debugLog" readonly></textarea>
-            <div class="button-row single">
+            <div class="section-title">🔧 디버그 로그</div>
+            <textarea id="debugLog" readonly style="background-color: #f9f9f9;"></textarea>
+            <div class="button-row" style="margin-top: 10px;">
                 <button class="clear-btn" onclick="clearDebugLog()">로그 삭제</button>
             </div>
         </div>
@@ -451,12 +315,10 @@
     <div class="status" id="status"></div>
 
     <script>
-        // 로컬 스토리지에 저장된 앱 목록
-        let customApps = [];
+        const API_BASE = 'https://api.smartthings.com/v1';
 
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
-            loadCustomApps();
         });
 
         function saveSettings() {
@@ -471,6 +333,7 @@
             localStorage.setItem('smartthings_token', token);
             localStorage.setItem('smartthings_deviceid', deviceId);
             showStatus('✓ 설정이 저장되었습니다.', 'success');
+            addDebugLog('설정 저장됨');
         }
 
         function loadSettings() {
@@ -522,223 +385,187 @@
             document.getElementById('debugLog').value = '';
         }
 
-        // TV의 Capabilities 및 지원 앱 자동 감지
-        function detectCapabilitiesAndApps() {
+        function displayApiResponse(data, isError = false) {
+            const response = document.getElementById('apiResponse');
+            response.className = 'api-response' + (isError ? ' error' : ' success');
+            response.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        function addTestResult(appId, success, message) {
+            const results = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const status = success ? '✓ 성공' : '✗ 실패';
+            results.value += `[${timestamp}] ${appId}: ${status} - ${message}\n`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearTestResults() {
+            document.getElementById('testResults').value = '';
+        }
+
+        // 1. /devices 엔드포인트 테스트
+        function testDevicesList() {
             const creds = getCredentials();
             if (!creds) return;
 
-            showStatus('📡 TV 분석 중입니다... (30초 소요)', 'info');
-            addDebugLog('=== TV 분석 시작 ===');
+            showStatus('📡 /devices 조회 중...', 'info');
+            addDebugLog('GET /devices 요청');
 
-            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/status`;
-
-            fetch(url, {
+            fetch(`${API_BASE}/devices`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${creds.token}`,
                     'Content-Type': 'application/json'
                 }
             })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('디바이스 정보 조회 실패: ' + response.status);
-                }
-            })
+            .then(response => response.json())
             .then(data => {
-                addDebugLog('API 응답 수신: ' + JSON.stringify(data).substring(0, 200) + '...');
-                displayCapabilities(data);
-                analyzeInstalledApps(data);
-                showStatus('✓ TV 분석이 완료되었습니다.', 'success');
+                displayApiResponse(data);
+                showStatus('✓ 디바이스 목록 조회 완료', 'success');
+                addDebugLog(`디바이스 ${data.items?.length || 0}개 발견`);
             })
             .catch(error => {
-                addDebugLog('❌ 오류: ' + error.message);
+                displayApiResponse({ error: error.message }, true);
                 showStatus('오류: ' + error.message, 'error');
+                addDebugLog('❌ 오류: ' + error.message);
             });
         }
 
-        function displayCapabilities(data) {
-            const container = document.getElementById('capabilitiesContainer');
-            let html = '';
+        // 2. /devices/{id} 엔드포인트 테스트
+        function testDeviceDetail() {
+            const creds = getCredentials();
+            if (!creds) return;
 
-            if (data.components && data.components.main) {
-                const main = data.components.main;
+            showStatus('📡 /devices/{id} 조회 중...', 'info');
+            addDebugLog(`GET /devices/${creds.deviceId}`);
+
+            fetch(`${API_BASE}/devices/${creds.deviceId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${creds.token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayApiResponse(data);
+                showStatus('✓ 디바이스 상세 정보 조회 완료', 'success');
+                addDebugLog('디바이스 상세정보 조회 완료');
                 
-                if (main.capabilities) {
-                    html += '<div class="device-info">';
-                    html += '<strong>🎯 지원하는 기능 (Capabilities):</strong><br>';
-                    
-                    const capabilities = main.capabilities
-                        .map(cap => cap.id || cap)
-                        .filter((item, index, arr) => arr.indexOf(item) === index);
-                    
-                    addDebugLog('감지된 Capabilities: ' + capabilities.join(', '));
-                    
-                    html += '<span style="word-break: break-all;">' + capabilities.join(', ') + '</span>';
-                    html += '</div>';
-                    
-                    // custom.launchapp 확인
-                    if (capabilities.includes('custom.launchapp')) {
-                        html += '<div class="device-info" style="border-left-color: #4CAF50;">';
-                        html += '<strong style="color: #4CAF50;">✓ 앱 실행 기능 지원됨</strong>';
-                        html += '</div>';
-                        addDebugLog('✓ custom.launchapp 지원: 앱 실행 가능');
-                    } else {
-                        html += '<div class="device-info" style="border-left-color: #f44336;">';
-                        html += '<strong style="color: #f44336;">✗ 앱 실행 기능 미지원</strong>';
-                        html += '</div>';
-                        addDebugLog('✗ custom.launchapp 미지원: 앱 실행 제한됨');
+                // Components 분석
+                if (data.components) {
+                    const caps = Object.keys(data.components.main?.capabilities || []);
+                    addDebugLog(`지원 Capabilities: ${caps.join(', ')}`);
+                }
+            })
+            .catch(error => {
+                displayApiResponse({ error: error.message }, true);
+                showStatus('오류: ' + error.message, 'error');
+                addDebugLog('❌ 오류: ' + error.message);
+            });
+        }
+
+        // 3. /status 엔드포인트 테스트
+        function testDeviceStatus() {
+            const creds = getCredentials();
+            if (!creds) return;
+
+            showStatus('📡 /status 조회 중...', 'info');
+            addDebugLog(`GET /devices/${creds.deviceId}/status`);
+
+            fetch(`${API_BASE}/devices/${creds.deviceId}/status`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${creds.token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayApiResponse(data);
+                showStatus('✓ TV 상태 조회 완료', 'success');
+                addDebugLog('TV 상태 조회 완료');
+            })
+            .catch(error => {
+                displayApiResponse({ error: error.message }, true);
+                showStatus('오류: ' + error.message, 'error');
+                addDebugLog('❌ 오류: ' + error.message);
+            });
+        }
+
+        // 4. Components 상세 조회
+        function testComponents() {
+            const creds = getCredentials();
+            if (!creds) return;
+
+            showStatus('📡 Components 조회 중...', 'info');
+            addDebugLog('Components 분석 시작');
+
+            fetch(`${API_BASE}/devices/${creds.deviceId}/status`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${creds.token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const analysis = {
+                    timestamp: new Date().toISOString(),
+                    components: data.components,
+                    analysis: {
+                        hasLaunchApp: data.components?.main?.custom?.launchapp ? true : false,
+                        capabilities: Object.keys(data.components?.main || {})
                     }
-                }
-
-                // 현재 상태 정보
-                if (main.switch) {
-                    const powerState = main.switch.switch.value === 'on' ? '켜짐 🟢' : '꺼짐 🔴';
-                    html += `<div class="device-info"><strong>⚡ 전원:</strong> ${powerState}</div>`;
-                }
-                
-                if (main.audioVolume) {
-                    html += `<div class="device-info"><strong>🔊 볼륨:</strong> ${main.audioVolume.volume.value}</div>`;
-                }
-                
-                if (main.tvChannel) {
-                    html += `<div class="device-info"><strong>📺 채널:</strong> ${main.tvChannel.tvChannel.value || 'N/A'}</div>`;
-                }
-
-                if (main.mediaInputSource) {
-                    html += `<div class="device-info"><strong>📡 입력 소스:</strong> ${main.mediaInputSource.inputSource.value || 'N/A'}</div>`;
-                }
-            }
-
-            if (!html) {
-                html = '<div class="device-info">디바이스 정보를 읽을 수 없습니다.</div>';
-            }
-
-            container.innerHTML = html;
-        }
-
-        function analyzeInstalledApps(data) {
-            const container = document.getElementById('appsContainer');
-            let html = '';
-
-            // SmartThings API는 직접적으로 설치된 앱 목록을 제공하지 않으므로
-            // 커뮤니티에서 수집된 알려진 앱 ID로 테스트
-            const commonApps = [
-                { name: 'Wavve', id: 'wavve' },
-                { name: 'Netflix', id: '3201907018807' },
-                { name: 'YouTube', id: '111299001912' },
-                { name: 'Prime Video', id: '3201910019365' },
-                { name: 'Disney+', id: '3201602006622' },
-                { name: 'HBO Max', id: '3201601007230' },
-                { name: 'Spotify', id: '3201706022396' },
-                { name: 'Tidal', id: '3201704003368' },
-                { name: 'Twitch', id: '3201707016433' },
-                { name: '쿠팡플레이', id: '3201805015330' },
-                { name: 'AppleTV+', id: '3201606024568' },
-                { name: 'YouTube TV', id: '3201707014489' }
-            ];
-
-            html += '<div class="device-info" style="border-left-color: #FF9800;">';
-            html += '<strong>ℹ️ 참고:</strong> SmartThings API는 설치된 앱을 자동 감지하지 못합니다.<br>';
-            html += '다음은 일반적인 앱입니다. 실제 설치 여부는 실행 테스트로 확인하세요.';
-            html += '</div>';
-
-            html += '<div class="app-list">';
-            commonApps.forEach(app => {
-                html += `<div class="app-item" onclick="selectAndTestApp('${app.id}', '${app.name}')" title="클릭하여 테스트">
-                    📱 ${app.name} (${app.id})
-                </div>`;
-            });
-            html += '</div>';
-
-            html += '<div class="device-info">';
-            html += '<strong>💡 조언:</strong> 각 앱을 클릭하여 실행 여부를 테스트하세요. <br>실행되는 앱 ID를 기록하면 나중에 사용할 수 있습니다.';
-            html += '</div>';
-
-            addDebugLog('일반적인 앱 목록 표시 (총 ' + commonApps.length + '개)');
-            container.innerHTML = html;
-        }
-
-        function selectAndTestApp(appId, appName) {
-            document.getElementById('customAppId').value = appId;
-            document.getElementById('customAppName').value = appName;
-            addDebugLog(`선택됨: ${appName} (${appId})`);
-            showStatus(`테스트할 앱: ${appName}`, 'info');
-        }
-
-        function addCustomApp() {
-            const name = document.getElementById('customAppName').value.trim();
-            const id = document.getElementById('customAppId').value.trim();
-
-            if (!name || !id) {
-                showStatus('앱 이름과 ID를 모두 입력해주세요.', 'error');
-                return;
-            }
-
-            // 중복 확인
-            if (customApps.find(app => app.id === id)) {
-                showStatus('이미 추가된 앱입니다.', 'error');
-                return;
-            }
-
-            customApps.push({ name, id });
-            localStorage.setItem('custom_apps', JSON.stringify(customApps));
-            
-            updateAppSelect();
-            document.getElementById('customAppName').value = '';
-            document.getElementById('customAppId').value = '';
-            showStatus(`✓ "${name}" 앱이 추가되었습니다.`, 'success');
-            addDebugLog(`앱 추가됨: ${name} (${id})`);
-        }
-
-        function loadCustomApps() {
-            const saved = localStorage.getItem('custom_apps');
-            if (saved) {
-                customApps = JSON.parse(saved);
-                updateAppSelect();
-            }
-        }
-
-        function updateAppSelect() {
-            const select = document.getElementById('appSelect');
-            select.innerHTML = '<option value="">-- 앱을 선택하세요 --</option>';
-            
-            customApps.forEach(app => {
-                const option = document.createElement('option');
-                option.value = app.id;
-                option.textContent = app.name;
-                select.appendChild(option);
+                };
+                displayApiResponse(analysis);
+                showStatus('✓ Components 분석 완료', 'success');
+                addDebugLog('Components 분석 완료');
+            })
+            .catch(error => {
+                displayApiResponse({ error: error.message }, true);
+                showStatus('오류: ' + error.message, 'error');
+                addDebugLog('❌ 오류: ' + error.message);
             });
         }
 
-        function testAppLaunch() {
-            const appId = document.getElementById('customAppId').value.trim();
-            if (!appId) {
+        // 앱 ID 순차 테스트
+        async function testAppsSequentially() {
+            const creds = getCredentials();
+            if (!creds) return;
+
+            const appIdString = document.getElementById('appIdsToTest').value.trim();
+            const appIds = appIdString.split('\n')
+                .map(id => id.trim())
+                .filter(id => id.length > 0);
+
+            if (appIds.length === 0) {
                 showStatus('테스트할 앱 ID를 입력해주세요.', 'error');
                 return;
             }
 
-            launchApp(appId, document.getElementById('customAppName').value.trim() || '앱');
-        }
+            clearTestResults();
+            showStatus(`${appIds.length}개 앱 테스트 시작...`, 'info');
+            addDebugLog(`앱 순차 테스트 시작: ${appIds.length}개`);
 
-        function launchSelectedApp() {
-            const select = document.getElementById('appSelect');
-            const appId = select.value;
-            if (!appId) {
-                showStatus('실행할 앱을 선택해주세요.', 'error');
-                return;
+            for (const appId of appIds) {
+                await testAppWithDelay(creds, appId);
             }
 
-            const selectedOption = select.options[select.selectedIndex];
-            launchApp(appId, selectedOption.text);
+            showStatus('✓ 모든 테스트 완료', 'success');
+            addDebugLog('모든 테스트 완료');
         }
 
-        function launchApp(appId, appName) {
-            const creds = getCredentials();
-            if (!creds) return;
+        function testAppWithDelay(creds, appId) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    testAppLaunch(creds, appId, resolve);
+                }, 1000);
+            });
+        }
 
-            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
+        function testAppLaunch(creds, appId, callback) {
+            const url = `${API_BASE}/devices/${creds.deviceId}/commands`;
             const body = {
                 commands: [{
                     component: "main",
@@ -748,8 +575,6 @@
                 }]
             };
 
-            addDebugLog(`앱 실행 시도: ${appName} (${appId})`);
-
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -760,150 +585,76 @@
             })
             .then(response => {
                 if (response.ok) {
-                    showStatus(`📱 "${appName}" 앱이 실행되었습니다.`, 'success');
-                    addDebugLog(`✓ 앱 실행 성공: ${appName}`);
+                    addTestResult(appId, true, '앱 실행 명령 전송됨');
+                    addDebugLog(`✓ ${appId}: 성공`);
                 } else {
-                    response.text().then(text => {
-                        const errMsg = text ? JSON.parse(text).message || text : '앱 실행 실패';
-                        showStatus(`❌ 앱 실행 실패: ${errMsg}`, 'error');
-                        addDebugLog(`✗ 앱 실행 실패: ${appName} - ${errMsg}`);
+                    response.json().then(err => {
+                        addTestResult(appId, false, err.message || '응답 오류');
+                        addDebugLog(`✗ ${appId}: 실패 - ${err.message}`);
                     });
                 }
+                callback();
             })
             .catch(error => {
-                showStatus('오류: ' + error.message, 'error');
-                addDebugLog('❌ 오류: ' + error.message);
+                addTestResult(appId, false, error.message);
+                addDebugLog(`✗ ${appId}: ${error.message}`);
+                callback();
             });
         }
 
-        function sendCommand(command, arg) {
+        // 커스텀 API 요청
+        function sendCustomRequest() {
             const creds = getCredentials();
             if (!creds) return;
 
-            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
-            let body = {};
+            const endpoint = document.getElementById('customEndpoint').value.trim();
+            const method = document.getElementById('httpMethod').value;
+            const bodyText = document.getElementById('customBody').value.trim();
 
-            if (command === 'Power') {
-                body = {
-                    commands: [{
-                        capability: 'switch',
-                        command: arg
-                    }]
-                };
-            } else if (command === 'volumeUp') {
-                body = {
-                    commands: [{
-                        capability: 'audioVolume',
-                        command: 'volumeUp'
-                    }]
-                };
-            } else if (command === 'volumeDown') {
-                body = {
-                    commands: [{
-                        capability: 'audioVolume',
-                        command: 'volumeDown'
-                    }]
-                };
-            } else if (command === 'mute') {
-                body = {
-                    commands: [{
-                        capability: 'audioMute',
-                        command: 'mute'
-                    }]
-                };
-            } else if (command === 'channelUp') {
-                body = {
-                    commands: [{
-                        capability: 'tvChannel',
-                        command: 'channelUp'
-                    }]
-                };
-            } else if (command === 'channelDown') {
-                body = {
-                    commands: [{
-                        capability: 'tvChannel',
-                        command: 'channelDown'
-                    }]
-                };
-            } else if (command === 'play') {
-                body = {
-                    commands: [{
-                        capability: 'mediaPlayback',
-                        command: 'play'
-                    }]
-                };
-            } else if (command === 'pause') {
-                body = {
-                    commands: [{
-                        capability: 'mediaPlayback',
-                        command: 'pause'
-                    }]
-                };
-            } else if (command === 'stop') {
-                body = {
-                    commands: [{
-                        capability: 'mediaPlayback',
-                        command: 'stop'
-                    }]
-                };
+            if (!endpoint) {
+                showStatus('엔드포인트를 입력해주세요.', 'error');
+                return;
             }
 
-            fetch(url, {
-                method: 'POST',
+            const url = `${API_BASE}${endpoint.replace('{deviceId}', creds.deviceId)}`;
+            let body = null;
+
+            try {
+                if (bodyText && (method === 'POST' || method === 'PUT')) {
+                    body = JSON.parse(bodyText);
+                }
+            } catch (e) {
+                showStatus('Request Body JSON 형식 오류: ' + e.message, 'error');
+                return;
+            }
+
+            showStatus(`📡 ${method} ${endpoint} 요청 중...`, 'info');
+            addDebugLog(`${method} ${url}`);
+
+            const options = {
+                method: method,
                 headers: {
                     'Authorization': `Bearer ${creds.token}`,
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-            .then(response => {
-                if (response.ok) {
-                    showStatus(`✓ ${command} 성공`, 'success');
-                    addDebugLog(`명령 실행: ${command}`);
-                } else {
-                    response.text().then(text => {
-                        addDebugLog(`❌ ${command} 실패: ${text}`);
-                        showStatus(`실패: ${text}`, 'error');
-                    });
                 }
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            fetch(url, options)
+            .then(response => response.json())
+            .then(data => {
+                displayApiResponse(data);
+                showStatus('✓ 요청 완료', 'success');
+                addDebugLog('커스텀 요청 완료');
             })
             .catch(error => {
+                displayApiResponse({ error: error.message }, true);
                 showStatus('오류: ' + error.message, 'error');
                 addDebugLog('❌ 오류: ' + error.message);
             });
-        }
-
-        function remoteKey(keyName) {
-            const creds = getCredentials();
-            if (!creds) return;
-
-            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
-            const body = {
-                commands: [{
-                    capability: 'samsungvd.remoteControl',
-                    command: 'send',
-                    arguments: [keyName]
-                }]
-            };
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${creds.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-            .then(response => {
-                if (response.ok) {
-                    showStatus(`✓ ${keyName} 성공`, 'success');
-                } else {
-                    response.text().then(text => {
-                        showStatus(`실패: ${text}`, 'error');
-                    });
-                }
-            })
-            .catch(error => showStatus('오류: ' + error.message, 'error'));
         }
     </script>
 </body>
