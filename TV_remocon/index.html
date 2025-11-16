@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Samsung TV Remote Control - Enhanced</title>
+    <title>Samsung TV Remote Control - Advanced</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -59,7 +59,7 @@
         
         label:first-of-type { margin-top: 0; }
         
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -68,11 +68,19 @@
             transition: border-color 0.3s;
             margin-bottom: 12px;
             font-family: inherit;
+            box-sizing: border-box;
         }
         
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
         }
         
         .button-row {
@@ -229,6 +237,7 @@
             animation: slideUp 0.3s ease-out;
             max-width: 460px;
             margin: 0 auto;
+            z-index: 1000;
         }
         
         .status.show {
@@ -258,6 +267,38 @@
             border-radius: 4px;
             font-size: 12px;
             color: #666;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .app-list {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .app-item {
+            padding: 8px;
+            margin: 4px 0;
+            background-color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            border-left: 3px solid #2196F3;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .app-item:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .app-item.success {
+            border-left-color: #4CAF50;
+            background-color: #e8f5e9;
         }
         
         @keyframes slideUp {
@@ -282,7 +323,7 @@
     <div class="container">
         <div class="header">
             <h1>📺 TV 리모컨</h1>
-            <p>Samsung Smart TV 원격 조작</p>
+            <p>Samsung Smart TV 원격 조작 (Advanced)</p>
         </div>
 
         <!-- 설정 섹션 -->
@@ -301,13 +342,37 @@
             </div>
         </div>
 
-        <!-- 디바이스 정보 및 앱 조회 -->
+        <!-- Capabilities 조회 및 앱 자동 감지 -->
         <div class="control-box">
-            <div class="section-title">📱 디바이스 정보</div>
+            <div class="section-title">📱 TV 능력 및 앱 감지</div>
             <div class="button-group single">
-                <button class="control-btn refresh-btn" onclick="fetchDeviceInfo()">디바이스 정보 조회</button>
+                <button class="control-btn refresh-btn" onclick="detectCapabilitiesAndApps()">📡 TV 분석 시작</button>
             </div>
-            <div id="deviceInfoContainer"></div>
+            <div id="capabilitiesContainer"></div>
+            <div id="appsContainer"></div>
+        </div>
+
+        <!-- 커스텀 앱 추가 -->
+        <div class="control-box">
+            <div class="section-title">🎬 앱 수동 추가</div>
+            <label>앱 이름</label>
+            <input type="text" id="customAppName" placeholder="예: Wavve" />
+            
+            <label>앱 ID (또는 package name)</label>
+            <input type="text" id="customAppId" placeholder="예: wavve 또는 package ID" />
+            
+            <div class="button-row">
+                <button class="save-btn" onclick="addCustomApp()">앱 추가</button>
+                <button class="refresh-btn" onclick="testAppLaunch()">선택 앱 실행</button>
+            </div>
+            
+            <label>추가된 앱 목록</label>
+            <select id="appSelect" style="margin-bottom: 12px;">
+                <option value="">-- 앱을 선택하세요 --</option>
+            </select>
+            <div class="button-group single">
+                <button class="control-btn btn-app" onclick="launchSelectedApp()">선택한 앱 실행</button>
+            </div>
         </div>
 
         <!-- 기본 명령 -->
@@ -327,21 +392,6 @@
             <div class="button-group">
                 <button class="control-btn btn-channel" onclick="sendCommand('channelUp', null)">📺 채널 올리기</button>
                 <button class="control-btn btn-channel" onclick="sendCommand('channelDown', null)">📻 채널 내리기</button>
-            </div>
-        </div>
-
-        <!-- 앱 실행 -->
-        <div class="control-box">
-            <div class="section-title">🎬 앱 실행</div>
-            <label>앱 선택</label>
-            <select id="appSelect">
-                <option value="">-- 앱을 선택하세요 --</option>
-            </select>
-            <div class="button-group single">
-                <button class="control-btn btn-app" onclick="launchSelectedApp()">선택한 앱 실행</button>
-            </div>
-            <div class="button-group single">
-                <button class="control-btn btn-app" onclick="launchWavve()">📺 Wavve 앱 실행</button>
             </div>
         </div>
 
@@ -386,46 +436,28 @@
                 <button class="control-btn btn-menu" onclick="remoteKey('EXIT')">종료</button>
             </div>
         </div>
+
+        <!-- 디버그 정보 -->
+        <div class="control-box">
+            <div class="section-title">🔧 디버그 정보</div>
+            <label>API 응답 로그</label>
+            <textarea id="debugLog" readonly></textarea>
+            <div class="button-row single">
+                <button class="clear-btn" onclick="clearDebugLog()">로그 삭제</button>
+            </div>
+        </div>
     </div>
 
     <div class="status" id="status"></div>
 
     <script>
-        // 알려진 앱 ID 목록 (Samsung TV Tizen)
-        const knownApps = [
-            { name: 'Wavve', id: 'wavve' },
-            { name: 'Netflix', id: '3201907018807' },
-            { name: 'YouTube', id: '111299001912' },
-            { name: 'YouTube TV', id: '3201707014489' },
-            { name: 'Prime Video', id: '3201512006785' },
-            { name: 'HBO Max', id: '3201601007230' },
-            { name: 'Disney+', id: '3201602006622' },
-            { name: 'Spotify', id: '3201706022396' },
-            { name: 'Tidal', id: '3201704003368' },
-            { name: 'Twitch', id: '3201707016433' },
-            { name: '웨이브 (Wavve)', id: 'com.wavve' },
-            { name: '인터넷 브라우저', id: 'Internet' },
-            { name: '스마트씽스', id: 'SmartThings' },
-            { name: 'Rakuten Viki', id: '3201601008369' },
-            { name: 'Apple TV+', id: '3201606024568' },
-        ];
+        // 로컬 스토리지에 저장된 앱 목록
+        let customApps = [];
 
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
-            populateAppList();
+            loadCustomApps();
         });
-
-        function populateAppList() {
-            const select = document.getElementById('appSelect');
-            select.innerHTML = '<option value="">-- 앱을 선택하세요 --</option>';
-            
-            knownApps.forEach(app => {
-                const option = document.createElement('option');
-                option.value = app.id;
-                option.textContent = app.name;
-                select.appendChild(option);
-            });
-        }
 
         function saveSettings() {
             const token = document.getElementById('accessToken').value.trim();
@@ -479,11 +511,24 @@
             }, 3000);
         }
 
-        function fetchDeviceInfo() {
+        function addDebugLog(message) {
+            const debugLog = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.value += `[${timestamp}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+
+        function clearDebugLog() {
+            document.getElementById('debugLog').value = '';
+        }
+
+        // TV의 Capabilities 및 지원 앱 자동 감지
+        function detectCapabilitiesAndApps() {
             const creds = getCredentials();
             if (!creds) return;
 
-            showStatus('📡 디바이스 정보를 조회 중입니다...', 'info');
+            showStatus('📡 TV 분석 중입니다... (30초 소요)', 'info');
+            addDebugLog('=== TV 분석 시작 ===');
 
             const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/status`;
 
@@ -498,60 +543,71 @@
                 if (response.ok) {
                     return response.json();
                 } else {
-                    throw new Error('디바이스 정보 조회 실패');
+                    throw new Error('디바이스 정보 조회 실패: ' + response.status);
                 }
             })
             .then(data => {
-                displayDeviceInfo(data);
-                showStatus('✓ 디바이스 정보가 조회되었습니다.', 'success');
+                addDebugLog('API 응답 수신: ' + JSON.stringify(data).substring(0, 200) + '...');
+                displayCapabilities(data);
+                analyzeInstalledApps(data);
+                showStatus('✓ TV 분석이 완료되었습니다.', 'success');
             })
             .catch(error => {
+                addDebugLog('❌ 오류: ' + error.message);
                 showStatus('오류: ' + error.message, 'error');
-                console.error('디바이스 정보 조회 실패:', error);
             });
         }
 
-        function displayDeviceInfo(data) {
-            const container = document.getElementById('deviceInfoContainer');
+        function displayCapabilities(data) {
+            const container = document.getElementById('capabilitiesContainer');
             let html = '';
 
             if (data.components && data.components.main) {
                 const main = data.components.main;
                 
-                // Capabilities 표시
                 if (main.capabilities) {
                     html += '<div class="device-info">';
-                    html += '<strong>지원하는 기능:</strong><br>';
+                    html += '<strong>🎯 지원하는 기능 (Capabilities):</strong><br>';
                     
-                    const supportedCaps = main.capabilities
+                    const capabilities = main.capabilities
                         .map(cap => cap.id || cap)
-                        .filter((item, index, arr) => arr.indexOf(item) === index) // 중복 제거
-                        .slice(0, 10); // 처음 10개만 표시
+                        .filter((item, index, arr) => arr.indexOf(item) === index);
                     
-                    html += supportedCaps.join(', ');
+                    addDebugLog('감지된 Capabilities: ' + capabilities.join(', '));
                     
-                    if (main.capabilities.length > 10) {
-                        html += ` (외 ${main.capabilities.length - 10}개)`;
-                    }
+                    html += '<span style="word-break: break-all;">' + capabilities.join(', ') + '</span>';
                     html += '</div>';
+                    
+                    // custom.launchapp 확인
+                    if (capabilities.includes('custom.launchapp')) {
+                        html += '<div class="device-info" style="border-left-color: #4CAF50;">';
+                        html += '<strong style="color: #4CAF50;">✓ 앱 실행 기능 지원됨</strong>';
+                        html += '</div>';
+                        addDebugLog('✓ custom.launchapp 지원: 앱 실행 가능');
+                    } else {
+                        html += '<div class="device-info" style="border-left-color: #f44336;">';
+                        html += '<strong style="color: #f44336;">✗ 앱 실행 기능 미지원</strong>';
+                        html += '</div>';
+                        addDebugLog('✗ custom.launchapp 미지원: 앱 실행 제한됨');
+                    }
                 }
-                
-                // 현재 상태 표시
+
+                // 현재 상태 정보
                 if (main.switch) {
-                    const powerState = main.switch.switch.value === 'on' ? '켜짐' : '꺼짐';
-                    html += `<div class="device-info"><strong>전원:</strong> ${powerState}</div>`;
+                    const powerState = main.switch.switch.value === 'on' ? '켜짐 🟢' : '꺼짐 🔴';
+                    html += `<div class="device-info"><strong>⚡ 전원:</strong> ${powerState}</div>`;
                 }
                 
                 if (main.audioVolume) {
-                    html += `<div class="device-info"><strong>볼륨:</strong> ${main.audioVolume.volume.value}</div>`;
+                    html += `<div class="device-info"><strong>🔊 볼륨:</strong> ${main.audioVolume.volume.value}</div>`;
                 }
                 
                 if (main.tvChannel) {
-                    html += `<div class="device-info"><strong>채널:</strong> ${main.tvChannel.tvChannel.value || 'N/A'}</div>`;
+                    html += `<div class="device-info"><strong>📺 채널:</strong> ${main.tvChannel.tvChannel.value || 'N/A'}</div>`;
                 }
 
                 if (main.mediaInputSource) {
-                    html += `<div class="device-info"><strong>입력 소스:</strong> ${main.mediaInputSource.inputSource.value || 'N/A'}</div>`;
+                    html += `<div class="device-info"><strong>📡 입력 소스:</strong> ${main.mediaInputSource.inputSource.value || 'N/A'}</div>`;
                 }
             }
 
@@ -560,6 +616,164 @@
             }
 
             container.innerHTML = html;
+        }
+
+        function analyzeInstalledApps(data) {
+            const container = document.getElementById('appsContainer');
+            let html = '';
+
+            // SmartThings API는 직접적으로 설치된 앱 목록을 제공하지 않으므로
+            // 커뮤니티에서 수집된 알려진 앱 ID로 테스트
+            const commonApps = [
+                { name: 'Wavve', id: 'wavve' },
+                { name: 'Netflix', id: '3201907018807' },
+                { name: 'YouTube', id: '111299001912' },
+                { name: 'Prime Video', id: '3201910019365' },
+                { name: 'Disney+', id: '3201602006622' },
+                { name: 'HBO Max', id: '3201601007230' },
+                { name: 'Spotify', id: '3201706022396' },
+                { name: 'Tidal', id: '3201704003368' },
+                { name: 'Twitch', id: '3201707016433' },
+                { name: '쿠팡플레이', id: '3201805015330' },
+                { name: 'AppleTV+', id: '3201606024568' },
+                { name: 'YouTube TV', id: '3201707014489' }
+            ];
+
+            html += '<div class="device-info" style="border-left-color: #FF9800;">';
+            html += '<strong>ℹ️ 참고:</strong> SmartThings API는 설치된 앱을 자동 감지하지 못합니다.<br>';
+            html += '다음은 일반적인 앱입니다. 실제 설치 여부는 실행 테스트로 확인하세요.';
+            html += '</div>';
+
+            html += '<div class="app-list">';
+            commonApps.forEach(app => {
+                html += `<div class="app-item" onclick="selectAndTestApp('${app.id}', '${app.name}')" title="클릭하여 테스트">
+                    📱 ${app.name} (${app.id})
+                </div>`;
+            });
+            html += '</div>';
+
+            html += '<div class="device-info">';
+            html += '<strong>💡 조언:</strong> 각 앱을 클릭하여 실행 여부를 테스트하세요. <br>실행되는 앱 ID를 기록하면 나중에 사용할 수 있습니다.';
+            html += '</div>';
+
+            addDebugLog('일반적인 앱 목록 표시 (총 ' + commonApps.length + '개)');
+            container.innerHTML = html;
+        }
+
+        function selectAndTestApp(appId, appName) {
+            document.getElementById('customAppId').value = appId;
+            document.getElementById('customAppName').value = appName;
+            addDebugLog(`선택됨: ${appName} (${appId})`);
+            showStatus(`테스트할 앱: ${appName}`, 'info');
+        }
+
+        function addCustomApp() {
+            const name = document.getElementById('customAppName').value.trim();
+            const id = document.getElementById('customAppId').value.trim();
+
+            if (!name || !id) {
+                showStatus('앱 이름과 ID를 모두 입력해주세요.', 'error');
+                return;
+            }
+
+            // 중복 확인
+            if (customApps.find(app => app.id === id)) {
+                showStatus('이미 추가된 앱입니다.', 'error');
+                return;
+            }
+
+            customApps.push({ name, id });
+            localStorage.setItem('custom_apps', JSON.stringify(customApps));
+            
+            updateAppSelect();
+            document.getElementById('customAppName').value = '';
+            document.getElementById('customAppId').value = '';
+            showStatus(`✓ "${name}" 앱이 추가되었습니다.`, 'success');
+            addDebugLog(`앱 추가됨: ${name} (${id})`);
+        }
+
+        function loadCustomApps() {
+            const saved = localStorage.getItem('custom_apps');
+            if (saved) {
+                customApps = JSON.parse(saved);
+                updateAppSelect();
+            }
+        }
+
+        function updateAppSelect() {
+            const select = document.getElementById('appSelect');
+            select.innerHTML = '<option value="">-- 앱을 선택하세요 --</option>';
+            
+            customApps.forEach(app => {
+                const option = document.createElement('option');
+                option.value = app.id;
+                option.textContent = app.name;
+                select.appendChild(option);
+            });
+        }
+
+        function testAppLaunch() {
+            const appId = document.getElementById('customAppId').value.trim();
+            if (!appId) {
+                showStatus('테스트할 앱 ID를 입력해주세요.', 'error');
+                return;
+            }
+
+            launchApp(appId, document.getElementById('customAppName').value.trim() || '앱');
+        }
+
+        function launchSelectedApp() {
+            const select = document.getElementById('appSelect');
+            const appId = select.value;
+            if (!appId) {
+                showStatus('실행할 앱을 선택해주세요.', 'error');
+                return;
+            }
+
+            const selectedOption = select.options[select.selectedIndex];
+            launchApp(appId, selectedOption.text);
+        }
+
+        function launchApp(appId, appName) {
+            const creds = getCredentials();
+            if (!creds) return;
+
+            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
+            const body = {
+                commands: [{
+                    component: "main",
+                    capability: "custom.launchapp",
+                    command: "launchApp",
+                    arguments: [appId]
+                }]
+            };
+
+            addDebugLog(`앱 실행 시도: ${appName} (${appId})`);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${creds.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showStatus(`📱 "${appName}" 앱이 실행되었습니다.`, 'success');
+                    addDebugLog(`✓ 앱 실행 성공: ${appName}`);
+                } else {
+                    response.text().then(text => {
+                        const errMsg = text ? JSON.parse(text).message || text : '앱 실행 실패';
+                        showStatus(`❌ 앱 실행 실패: ${errMsg}`, 'error');
+                        addDebugLog(`✗ 앱 실행 실패: ${appName} - ${errMsg}`);
+                    });
+                }
+            })
+            .catch(error => {
+                showStatus('오류: ' + error.message, 'error');
+                addDebugLog('❌ 오류: ' + error.message);
+            });
         }
 
         function sendCommand(command, arg) {
@@ -645,13 +859,18 @@
             .then(response => {
                 if (response.ok) {
                     showStatus(`✓ ${command} 성공`, 'success');
+                    addDebugLog(`명령 실행: ${command}`);
                 } else {
                     response.text().then(text => {
+                        addDebugLog(`❌ ${command} 실패: ${text}`);
                         showStatus(`실패: ${text}`, 'error');
                     });
                 }
             })
-            .catch(error => showStatus('오류: ' + error.message, 'error'));
+            .catch(error => {
+                showStatus('오류: ' + error.message, 'error');
+                addDebugLog('❌ 오류: ' + error.message);
+            });
         }
 
         function remoteKey(keyName) {
@@ -685,90 +904,6 @@
                 }
             })
             .catch(error => showStatus('오류: ' + error.message, 'error'));
-        }
-
-        // 선택한 앱 실행
-        function launchSelectedApp() {
-            const appId = document.getElementById('appSelect').value;
-            if (!appId) {
-                showStatus('실행할 앱을 선택해주세요.', 'error');
-                return;
-            }
-
-            const creds = getCredentials();
-            if (!creds) return;
-
-            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
-            const body = {
-                commands: [{
-                    component: "main",
-                    capability: "custom.launchapp",
-                    command: "launchApp",
-                    arguments: [appId]
-                }]
-            };
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${creds.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-            .then(response => {
-                if (response.ok) {
-                    const selectedOption = document.getElementById('appSelect').options[document.getElementById('appSelect').selectedIndex];
-                    showStatus(`📱 ${selectedOption.text} 앱이 실행되었습니다.`, 'success');
-                } else {
-                    response.text().then(text => {
-                        showStatus('앱 실행 실패. 리모컨의 홈 버튼으로 수동 실행해 주세요.', 'error');
-                        console.log('실패 상세:', text);
-                    });
-                }
-            })
-            .catch(error => {
-                showStatus('오류: ' + error.message, 'error');
-            });
-        }
-
-        // Wavve 앱 실행 함수
-        function launchWavve() {
-            const creds = getCredentials();
-            if (!creds) return;
-
-            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
-            
-            const body = {
-                commands: [{
-                    component: "main",
-                    capability: "custom.launchapp",
-                    command: "launchApp",
-                    arguments: ["wavve"]
-                }]
-            };
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${creds.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-            .then(response => {
-                if (response.ok) {
-                    showStatus('📺 Wavve 앱이 실행되었습니다.', 'success');
-                } else {
-                    response.text().then(text => {
-                        showStatus('Wavve 실행 실패. 리모컨의 홈 버튼으로 수동 실행해 주세요.', 'error');
-                        console.log('실패 상세:', text);
-                    });
-                }
-            })
-            .catch(error => {
-                showStatus('오류: ' + error.message, 'error');
-            });
         }
     </script>
 </body>
