@@ -163,10 +163,12 @@
         
         .btn-power { background: linear-gradient(135deg, #FF6B6B, #FF5252); }
         .btn-volume { background: linear-gradient(135deg, #4ECDC4, #44A08D); }
+        .btn-channel { background: linear-gradient(135deg, #FFA726, #FF7043); }
         .btn-playback { background: linear-gradient(135deg, #F38181, #E86B6B); }
         .btn-nav { background: linear-gradient(135deg, #AA96DA, #8B7DB8); }
         .btn-menu { background: linear-gradient(135deg, #FCBAD3, #FB9DC1); }
         .btn-home { background: linear-gradient(135deg, #A8D8EA, #7EC8E3); }
+        .btn-app { background: linear-gradient(135deg, #66BB6A, #43A047); }
         
         .remote-pad {
             display: flex;
@@ -287,6 +289,18 @@
             </div>
             <div class="button-group single">
                 <button class="control-btn btn-volume" onclick="sendCommand('mute', null)">🔇 음소거</button>
+            </div>
+            <div class="button-group">
+                <button class="control-btn btn-channel" onclick="sendCommand('channelUp', null)">📺 채널 올리기</button>
+                <button class="control-btn btn-channel" onclick="sendCommand('channelDown', null)">📻 채널 내리기</button>
+            </div>
+        </div>
+
+        <!-- Wavve 앱 실행 -->
+        <div class="control-box">
+            <div class="section-title">🎬 앱 실행</div>
+            <div class="button-group single">
+                <button class="control-btn btn-app" onclick="launchWavve()">📺 Wavve 앱 실행</button>
             </div>
         </div>
 
@@ -427,6 +441,20 @@
                         command: 'mute'
                     }]
                 };
+            } else if (command === 'channelUp') {
+                body = {
+                    commands: [{
+                        capability: 'tvChannel',
+                        command: 'channelUp'
+                    }]
+                };
+            } else if (command === 'channelDown') {
+                body = {
+                    commands: [{
+                        capability: 'tvChannel',
+                        command: 'channelDown'
+                    }]
+                };
             } else if (command === 'play') {
                 body = {
                     commands: [{
@@ -460,12 +488,14 @@
             })
             .then(response => {
                 if (response.ok) {
-                    console.log(`${command} 성공`);
+                    showStatus(`✓ ${command} 성공`, 'success');
                 } else {
-                    response.text().then(text => console.log(`실패: ${text}`));
+                    response.text().then(text => {
+                        showStatus(`실패: ${text}`, 'error');
+                    });
                 }
             })
-            .catch(error => console.log('오류: ' + error.message));
+            .catch(error => showStatus('오류: ' + error.message, 'error'));
         }
 
         function remoteKey(keyName) {
@@ -491,12 +521,54 @@
             })
             .then(response => {
                 if (response.ok) {
-                    console.log(`${keyName} 성공`);
+                    showStatus(`✓ ${keyName} 성공`, 'success');
                 } else {
-                    response.text().then(text => console.log(`실패: ${text}`));
+                    response.text().then(text => {
+                        showStatus(`실패: ${text}`, 'error');
+                    });
                 }
             })
-            .catch(error => console.log('오류: ' + error.message));
+            .catch(error => showStatus('오류: ' + error.message, 'error'));
+        }
+
+        // Wavve 앱 실행 함수
+        function launchWavve() {
+            const creds = getCredentials();
+            if (!creds) return;
+
+            const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
+            
+            // 방법 1: 일반 앱 실행 명령 시도
+            const body = {
+                commands: [{
+                    component: "main",
+                    capability: "custom.launchapp",
+                    command: "launchApp",
+                    arguments: ["wavve"]  // TV에 따라 앱 이름 또는 ID가 필요
+                }]
+            };
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${creds.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+            .then(response => {
+                if (response.ok) {
+                    showStatus('📺 Wavve 앱 실행 명령을 보냈습니다.', 'success');
+                } else {
+                    response.text().then(text => {
+                        showStatus('Wavve 실행 실패. 리모컨의 홈 버튼으로 수동 실행해 주세요.', 'error');
+                        console.log('실패 상세:', text);
+                    });
+                }
+            })
+            .catch(error => {
+                showStatus('오류: ' + error.message, 'error');
+            });
         }
     </script>
 </body>
