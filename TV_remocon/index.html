@@ -10,6 +10,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 320px;
         }
         
         .container { 
@@ -205,11 +206,6 @@
             transform: translateY(0);
         }
         
-        .arrow-btn.recording {
-            background: linear-gradient(135deg, #FF6B6B, #FF5252);
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
-        }
-        
         .task-box {
             background: white;
             border-radius: 15px;
@@ -286,31 +282,6 @@
             max-height: 200px;
             overflow-y: auto;
             border: 1px solid #e0e0e0;
-        }
-        
-        .task-item {
-            font-size: 12px;
-            padding: 8px;
-            background-color: white;
-            border-radius: 6px;
-            margin-bottom: 5px;
-            border-left: 3px solid #667eea;
-            color: #555;
-        }
-        
-        .task-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .task-item-command {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .task-item-time {
-            font-size: 11px;
-            color: #999;
-            margin-top: 3px;
         }
         
         .saved-task-item {
@@ -497,17 +468,16 @@
         
         .status {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
+            top: 20px;
             right: 20px;
             padding: 15px 20px;
             border-radius: 10px;
             display: none;
             font-size: 14px;
             font-weight: 600;
-            animation: slideUp 0.3s ease-out;
-            max-width: 460px;
-            margin: 0 auto;
+            animation: slideDown 0.3s ease-out;
+            max-width: 300px;
+            z-index: 1000;
         }
         
         .status.show {
@@ -528,16 +498,124 @@
             background-color: #2196F3;
             color: white;
         }
+
+        .status.warning {
+            background-color: #ff9800;
+            color: white;
+        }
         
-        @keyframes slideUp {
+        @keyframes slideDown {
             from {
-                transform: translateY(100px);
+                transform: translateY(-100px);
                 opacity: 0;
             }
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
+        }
+
+        /* 로그 창 스타일 */
+        .log-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #667eea;
+            max-height: 300px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-header {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-header-buttons button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .log-header-buttons button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .log-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background-color: #f5f5f5;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .log-entry.success {
+            border-left-color: #4CAF50;
+        }
+
+        .log-entry.error {
+            border-left-color: #f44336;
+            background-color: #ffebee;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ff9800;
+            background-color: #fff3e0;
+        }
+
+        .log-entry.info {
+            border-left-color: #2196F3;
+            background-color: #e3f2fd;
+        }
+
+        .log-time {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .log-command {
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .log-result {
+            color: #555;
+            margin-top: 4px;
+            padding: 4px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 4px;
         }
         
         @media (max-width: 480px) {
@@ -547,6 +625,8 @@
             .task-list { max-height: 120px; }
             .saved-task-item { flex-direction: column; align-items: flex-start; }
             .saved-task-actions { margin-left: 0; margin-top: 8px; width: 100%; }
+            .log-panel { max-height: 250px; }
+            .status { max-width: 250px; right: 10px; }
         }
     </style>
 </head>
@@ -680,6 +760,19 @@
 
     <div class="status" id="status"></div>
 
+    <!-- 로그 패널 -->
+    <div class="log-panel">
+        <div class="log-header">
+            <span>📜 명령 로그</span>
+            <div class="log-header-buttons">
+                <button onclick="clearLog()">삭제</button>
+            </div>
+        </div>
+        <div class="log-content" id="logContent">
+            <div class="empty-message">로그가 없습니다</div>
+        </div>
+    </div>
+
     <script>
         // 작업 기록 관련 변수
         let isRecording = false;
@@ -688,11 +781,54 @@
         let selectedSavedTaskIndex = -1;
         let isExecuting = false;
         let currentActionIndex = -1;
+        let commandLog = [];
 
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
             loadSavedTasks();
         });
+
+        // ==================== 로그 관련 함수 ====================
+        function addLog(command, result, status = 'info') {
+            const timestamp = new Date().toLocaleTimeString('ko-KR');
+            const logEntry = {
+                timestamp,
+                command,
+                result,
+                status
+            };
+            
+            commandLog.push(logEntry);
+            
+            // 로그 UI 업데이트
+            const logContent = document.getElementById('logContent');
+            
+            if (commandLog.length === 1) {
+                logContent.innerHTML = '';
+            }
+            
+            const logEntryDiv = document.createElement('div');
+            logEntryDiv.className = `log-entry ${status}`;
+            logEntryDiv.innerHTML = `
+                <div class="log-time">[${timestamp}]</div>
+                <div class="log-command">📤 ${command}</div>
+                <div class="log-result">📥 ${result}</div>
+            `;
+            
+            logContent.appendChild(logEntryDiv);
+            
+            // 로그 창 자동 스크롤
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        function clearLog() {
+            if (confirm('모든 로그를 삭제하시겠습니까?')) {
+                commandLog = [];
+                const logContent = document.getElementById('logContent');
+                logContent.innerHTML = '<div class="empty-message">로그가 없습니다</div>';
+                showStatus('✓ 로그가 삭제되었습니다.', 'success');
+            }
+        }
 
         // ==================== 탭 전환 기능 ====================
         function switchTab(tabName) {
@@ -723,6 +859,7 @@
 
             localStorage.setItem('smartthings_token', token);
             localStorage.setItem('smartthings_deviceid', deviceId);
+            addLog('설정 저장', '토큰과 디바이스ID가 저장되었습니다.', 'success');
             showStatus('✓ 설정이 저장되었습니다.', 'success');
         }
 
@@ -740,6 +877,7 @@
                 localStorage.removeItem('smartthings_deviceid');
                 document.getElementById('accessToken').value = '';
                 document.getElementById('deviceId').value = '';
+                addLog('설정 초기화', '모든 설정이 삭제되었습니다.', 'warning');
                 showStatus('✓ 설정이 초기화되었습니다.', 'success');
             }
         }
@@ -763,6 +901,7 @@
                 taskStatus.classList.add('recording');
                 
                 updateTaskList();
+                addLog('작업 기록 시작', '새 작업 기록을 시작합니다.', 'info');
                 showStatus('기억 시작됨', 'info');
             } else {
                 // 기억 중지
@@ -774,6 +913,7 @@
                 taskStatus.textContent = `${recordedTasks.length}개 행위 기록됨`;
                 taskStatus.classList.remove('recording');
                 
+                addLog('작업 기록 완료', `총 ${recordedTasks.length}개의 행위가 기록되었습니다.`, 'success');
                 showStatus('기억 완료', 'success');
             }
         }
@@ -841,6 +981,7 @@
                 document.getElementById('taskStatus').classList.remove('recording');
                 
                 updateTaskList();
+                addLog('작업 삭제', '기록된 작업이 모두 삭제되었습니다.', 'warning');
                 showStatus('✓ 행위가 삭제되었습니다.', 'success');
             }
         }
@@ -862,6 +1003,7 @@
             });
 
             localStorage.setItem('saved_tasks', JSON.stringify(savedTasks));
+            addLog('작업 저장', `"${taskName}" 작업이 저장되었습니다.`, 'success');
             showStatus(`✓ "${taskName}" 작업이 저장되었습니다.`, 'success');
             
             // 저장된 작업 탭 업데이트
@@ -917,6 +1059,7 @@
             document.getElementById('executeSavedBtn').disabled = false;
             document.getElementById('deleteSelectedBtn').disabled = false;
 
+            addLog('작업 선택', `"${selectedTask.name}" 작업이 선택되었습니다.`, 'info');
             showStatus(`"${selectedTask.name}" 작업 선택됨`, 'info');
         }
 
@@ -967,13 +1110,14 @@
                 document.getElementById('executeSavedBtn').disabled = true;
                 document.getElementById('deleteSelectedBtn').disabled = true;
                 
+                addLog('작업 삭제', `"${taskName}" 작업이 삭제되었습니다.`, 'warning');
                 loadSavedTasks();
                 showStatus(`✓ "${taskName}" 작업이 삭제되었습니다.`, 'success');
             }
         }
 
         function deleteSavedTask(event, index) {
-            event.stopPropagation(); // 클릭 이벤트 전파 방지
+            event.stopPropagation();
             
             const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
             const taskName = savedTasks[index].name;
@@ -989,6 +1133,7 @@
                     document.getElementById('deleteSelectedBtn').disabled = true;
                 }
                 
+                addLog('작업 삭제', `"${taskName}" 작업이 삭제되었습니다.`, 'warning');
                 loadSavedTasks();
                 showStatus(`✓ "${taskName}" 작업이 삭제되었습니다.`, 'success');
             }
@@ -1006,6 +1151,7 @@
             const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
             const selectedTask = savedTasks[selectedSavedTaskIndex];
 
+            addLog('작업 실행 시작', `"${selectedTask.name}" 작업 실행을 시작합니다.`, 'info');
             showStatus(`"${selectedTask.name}" 작업 실행 시작...`, 'info');
             
             isExecuting = true;
@@ -1016,6 +1162,7 @@
                     isExecuting = false;
                     currentActionIndex = -1;
                     updateSelectedActionList();
+                    addLog('작업 완료', `"${selectedTask.name}" 작업이 완료되었습니다.`, 'success');
                     showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
                     return;
                 }
@@ -1040,6 +1187,7 @@
                         isExecuting = false;
                         currentActionIndex = -1;
                         updateSelectedActionList();
+                        addLog('작업 완료', `"${selectedTask.name}" 작업이 완료되었습니다.`, 'success');
                         showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
                     }, 500);
                 }
@@ -1058,6 +1206,7 @@
             const creds = getCredentials();
             if (!creds) return;
 
+            addLog('작업 실행 시작', `${recordedTasks.length}개 행위 실행을 시작합니다.`, 'info');
             showStatus('작업 실행 시작...', 'info');
             
             isExecuting = true;
@@ -1068,6 +1217,7 @@
                     isExecuting = false;
                     currentActionIndex = -1;
                     updateTaskList();
+                    addLog('작업 완료', `모든 ${recordedTasks.length}개 행위가 완료되었습니다.`, 'success');
                     showStatus('✓ 모든 행위 완료', 'success');
                     return;
                 }
@@ -1092,6 +1242,7 @@
                         isExecuting = false;
                         currentActionIndex = -1;
                         updateTaskList();
+                        addLog('작업 완료', `모든 ${recordedTasks.length}개 행위가 완료되었습니다.`, 'success');
                         showStatus('✓ 모든 행위 완료', 'success');
                     }, 500);
                 }
@@ -1133,6 +1284,7 @@
             
             if (!token || !deviceId) {
                 showStatus('⚠️ 토큰과 디바이스ID를 입력해주세요.', 'error');
+                addLog('오류', '토큰과 디바이스ID가 입력되지 않았습니다.', 'error');
                 return null;
             }
             return { token, deviceId };
@@ -1156,6 +1308,7 @@
         function sendCommandDirect(command, arg, creds) {
             const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
             let body = {};
+            let commandName = command;
 
             if (command === 'Power') {
                 body = {
@@ -1164,6 +1317,7 @@
                         command: arg
                     }]
                 };
+                commandName = `전원 ${arg === 'on' ? '켜기' : '끄기'}`;
             } else if (command === 'volumeUp') {
                 body = {
                     commands: [{
@@ -1171,6 +1325,7 @@
                         command: 'volumeUp'
                     }]
                 };
+                commandName = '볼륨 올리기';
             } else if (command === 'volumeDown') {
                 body = {
                     commands: [{
@@ -1178,6 +1333,7 @@
                         command: 'volumeDown'
                     }]
                 };
+                commandName = '볼륨 내리기';
             } else if (command === 'mute') {
                 body = {
                     commands: [{
@@ -1185,6 +1341,7 @@
                         command: 'mute'
                     }]
                 };
+                commandName = '음소거';
             } else if (command === 'play') {
                 body = {
                     commands: [{
@@ -1192,6 +1349,7 @@
                         command: 'play'
                     }]
                 };
+                commandName = '재생';
             } else if (command === 'pause') {
                 body = {
                     commands: [{
@@ -1199,6 +1357,7 @@
                         command: 'pause'
                     }]
                 };
+                commandName = '일시정지';
             } else if (command === 'stop') {
                 body = {
                     commands: [{
@@ -1206,6 +1365,7 @@
                         command: 'stop'
                     }]
                 };
+                commandName = '정지';
             }
 
             fetch(url, {
@@ -1218,12 +1378,21 @@
             })
             .then(response => {
                 if (response.ok) {
-                    console.log(`${command} 성공`);
+                    addLog(commandName, '✓ 명령 전송 성공', 'success');
+                    showStatus(`✓ ${commandName} 성공`, 'success');
+                    return response.json();
                 } else {
-                    response.text().then(text => console.log(`실패: ${text}`));
+                    return response.json().then(data => {
+                        const errorMsg = data.message || `오류 코드: ${response.status}`;
+                        addLog(commandName, `✗ ${errorMsg}`, 'error');
+                        showStatus(`✗ ${commandName} 실패`, 'error');
+                    });
                 }
             })
-            .catch(error => console.log('오류: ' + error.message));
+            .catch(error => {
+                addLog(commandName, `✗ 네트워크 오류: ${error.message}`, 'error');
+                showStatus('✗ 네트워크 오류', 'error');
+            });
         }
 
         function remoteKey(keyName) {
@@ -1242,6 +1411,19 @@
                 }]
             };
 
+            const keyDescriptions = {
+                'UP': '위 화살표',
+                'DOWN': '아래 화살표',
+                'LEFT': '왼쪽 화살표',
+                'RIGHT': '오른쪽 화살표',
+                'OK': '확인',
+                'BACK': '뒤로',
+                'MENU': '메뉴',
+                'HOME': '홈',
+                'EXIT': '종료'
+            };
+            const keyName_KR = keyDescriptions[keyName] || keyName;
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -1252,12 +1434,21 @@
             })
             .then(response => {
                 if (response.ok) {
-                    console.log(`${keyName} 성공`);
+                    addLog(`키보드: ${keyName_KR}`, '✓ 명령 전송 성공', 'success');
+                    showStatus(`✓ ${keyName_KR} 성공`, 'success');
+                    return response.json();
                 } else {
-                    response.text().then(text => console.log(`실패: ${text}`));
+                    return response.json().then(data => {
+                        const errorMsg = data.message || `오류 코드: ${response.status}`;
+                        addLog(`키보드: ${keyName_KR}`, `✗ ${errorMsg}`, 'error');
+                        showStatus(`✗ ${keyName_KR} 실패`, 'error');
+                    });
                 }
             })
-            .catch(error => console.log('오류: ' + error.message));
+            .catch(error => {
+                addLog(`키보드: ${keyName_KR}`, `✗ 네트워크 오류: ${error.message}`, 'error');
+                showStatus('✗ 네트워크 오류', 'error');
+            });
         }
 
         // ==================== 모든 버튼 클릭 이벤트에 기억 기능 추가 ====================
