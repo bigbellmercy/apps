@@ -246,12 +246,44 @@
             50% { opacity: 0.7; }
         }
         
+        .task-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab-btn {
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            color: #999;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .task-list {
             background-color: #f9f9f9;
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 15px;
-            max-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
             border: 1px solid #e0e0e0;
         }
@@ -279,6 +311,102 @@
             font-size: 11px;
             color: #999;
             margin-top: 3px;
+        }
+        
+        .saved-task-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .saved-task-item:hover {
+            background-color: #f5f5f5;
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .saved-task-item.selected {
+            background-color: #e8eaf6;
+            border-color: #667eea;
+            border-width: 2px;
+        }
+        
+        .saved-task-info {
+            flex: 1;
+        }
+        
+        .saved-task-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .saved-task-detail {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .saved-task-actions {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        
+        .saved-task-actions button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-delete-task {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-delete-task:hover {
+            background-color: #d32f2f;
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 13px;
+        }
+        
+        .action-list {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .action-item {
+            font-size: 12px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            border-left: 3px solid #4ECDC4;
+            color: #555;
+        }
+        
+        .action-item:last-child {
+            margin-bottom: 0;
         }
         
         .task-buttons {
@@ -389,6 +517,8 @@
             .header h1 { font-size: 28px; }
             .control-btn { padding: 12px; font-size: 12px; }
             .task-list { max-height: 120px; }
+            .saved-task-item { flex-direction: column; align-items: flex-start; }
+            .saved-task-actions { margin-left: 0; margin-top: 8px; width: 100%; }
         }
     </style>
 </head>
@@ -417,23 +547,47 @@
 
         <!-- 작업(Task) 섹션 -->
         <div class="task-box">
-            <div class="section-title">📋 작업 기록</div>
+            <div class="section-title">📋 작업 관리</div>
             
-            <div class="task-status" id="taskStatus">
-                준비됨
+            <!-- 탭 네비게이션 -->
+            <div class="task-tabs">
+                <button class="tab-btn active" onclick="switchTab('record')">새 작업 기록</button>
+                <button class="tab-btn" onclick="switchTab('saved')">저장된 작업</button>
             </div>
 
-            <div class="task-list" id="taskList">
-                <div style="text-align: center; color: #999; padding: 20px; font-size: 13px;">
-                    기억 버튼을 눌러 시작하세요
+            <!-- 탭 1: 새 작업 기록 -->
+            <div id="record-tab" class="tab-content active">
+                <div class="task-status" id="taskStatus">
+                    준비됨
+                </div>
+
+                <div class="task-list" id="taskList">
+                    <div class="empty-message">기억 버튼을 눌러 시작하세요</div>
+                </div>
+
+                <div class="task-buttons">
+                    <button class="btn-record" id="recordBtn" onclick="toggleRecording()">🔴 기억 시작</button>
+                    <button class="btn-execute" id="executeBtn" onclick="executeTask()" disabled>▶️ 실행</button>
+                    <button class="btn-clear-task" onclick="clearTask()">🗑️ 삭제</button>
+                    <button class="control-btn btn-task" onclick="showSaveDialog()">💾 저장</button>
                 </div>
             </div>
 
-            <div class="task-buttons">
-                <button class="btn-record" id="recordBtn" onclick="toggleRecording()">🔴 기억 시작</button>
-                <button class="btn-execute" id="executeBtn" onclick="executeTask()" disabled>▶️ 실행</button>
-                <button class="btn-clear-task" onclick="clearTask()">🗑️ 삭제</button>
-                <button class="control-btn btn-task" onclick="saveTask()">💾 저장</button>
+            <!-- 탭 2: 저장된 작업 -->
+            <div id="saved-tab" class="tab-content">
+                <div class="task-list" id="savedTaskList">
+                    <div class="empty-message">저장된 작업이 없습니다</div>
+                </div>
+
+                <div style="margin-bottom: 15px; padding: 10px; background-color: #f0f0f0; border-radius: 8px; display: none;" id="selectedTaskInfo">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">선택된 작업의 행위들:</div>
+                    <div class="action-list" id="selectedActionList"></div>
+                </div>
+
+                <div class="task-buttons">
+                    <button class="btn-execute" id="executeSavedBtn" onclick="executeSelectedTask()" disabled>▶️ 실행</button>
+                    <button class="btn-clear-task" onclick="deleteSelectedTask()" id="deleteSelectedBtn" disabled>🗑️ 삭제</button>
+                </div>
             </div>
         </div>
 
@@ -503,11 +657,29 @@
         let isRecording = false;
         let recordedTasks = [];
         let recordStartTime = null;
+        let selectedSavedTaskIndex = -1;
 
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
-            loadSavedTask();
+            loadSavedTasks();
         });
+
+        // ==================== 탭 전환 기능 ====================
+        function switchTab(tabName) {
+            // 모든 탭 콘텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 선택된 탭 표시
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
 
         // ==================== 설정 관련 함수 ====================
         function saveSettings() {
@@ -542,7 +714,7 @@
             }
         }
 
-        // ==================== 작업(Task) 관련 함수 ====================
+        // ==================== 작업(Task) 기록 함수 ====================
         function toggleRecording() {
             const recordBtn = document.getElementById('recordBtn');
             const executeBtn = document.getElementById('executeBtn');
@@ -569,7 +741,7 @@
                 recordBtn.textContent = '🔴 기억 시작';
                 recordBtn.classList.remove('stop');
                 executeBtn.disabled = recordedTasks.length === 0;
-                taskStatus.textContent = `${recordedTasks.length}개 작업 기록됨`;
+                taskStatus.textContent = `${recordedTasks.length}개 행위 기록됨`;
                 taskStatus.classList.remove('recording');
                 
                 showStatus('기억 완료', 'success');
@@ -595,7 +767,7 @@
             const taskList = document.getElementById('taskList');
             
             if (recordedTasks.length === 0) {
-                taskList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px; font-size: 13px;">기억 버튼을 눌러 시작하세요</div>';
+                taskList.innerHTML = '<div class="empty-message">기억 버튼을 눌러 시작하세요</div>';
                 return;
             }
 
@@ -605,7 +777,7 @@
                 const timeFromPrev = i === 0 ? 0 : (task.time - recordedTasks[i-1].time);
                 
                 html += `
-                    <div class="task-item">
+                    <div class="action-item">
                         <div class="task-item-command">${i + 1}. ${task.name}</div>
                         <div>${task.description}</div>
                         <div class="task-item-time">시간: ${task.time.toFixed(1)}초 (간격: ${timeFromPrev.toFixed(1)}초)</div>
@@ -615,9 +787,208 @@
             taskList.innerHTML = html;
         }
 
+        function clearTask() {
+            if (recordedTasks.length === 0) {
+                showStatus('삭제할 행위가 없습니다.', 'error');
+                return;
+            }
+
+            if (confirm('현재 기록된 모든 행위를 삭제하시겠습니까?')) {
+                recordedTasks = [];
+                isRecording = false;
+                
+                document.getElementById('recordBtn').textContent = '🔴 기억 시작';
+                document.getElementById('recordBtn').classList.remove('stop');
+                document.getElementById('executeBtn').disabled = true;
+                document.getElementById('taskStatus').textContent = '준비됨';
+                document.getElementById('taskStatus').classList.remove('recording');
+                
+                updateTaskList();
+                showStatus('✓ 행위가 삭제되었습니다.', 'success');
+            }
+        }
+
+        function showSaveDialog() {
+            if (recordedTasks.length === 0) {
+                showStatus('저장할 행위가 없습니다.', 'error');
+                return;
+            }
+
+            const taskName = prompt('작업 이름을 입력하세요:', '새 작업');
+            if (!taskName) return;
+
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            savedTasks.push({
+                name: taskName,
+                tasks: JSON.parse(JSON.stringify(recordedTasks)),
+                savedDate: new Date().toLocaleString('ko-KR')
+            });
+
+            localStorage.setItem('saved_tasks', JSON.stringify(savedTasks));
+            showStatus(`✓ "${taskName}" 작업이 저장되었습니다.`, 'success');
+            
+            // 저장된 작업 탭 업데이트
+            loadSavedTasks();
+        }
+
+        // ==================== 저장된 작업 관리 함수 ====================
+        function loadSavedTasks() {
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            const savedTaskList = document.getElementById('savedTaskList');
+
+            if (savedTasks.length === 0) {
+                savedTaskList.innerHTML = '<div class="empty-message">저장된 작업이 없습니다</div>';
+                document.getElementById('selectedTaskInfo').style.display = 'none';
+                document.getElementById('executeSavedBtn').disabled = true;
+                document.getElementById('deleteSelectedBtn').disabled = true;
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < savedTasks.length; i++) {
+                const task = savedTasks[i];
+                const taskCount = task.tasks.length;
+                const isSelected = i === selectedSavedTaskIndex ? 'selected' : '';
+                
+                html += `
+                    <div class="saved-task-item ${isSelected}" onclick="selectSavedTask(${i})">
+                        <div class="saved-task-info">
+                            <div class="saved-task-name">${task.name}</div>
+                            <div class="saved-task-detail">${taskCount}개 행위 • ${task.savedDate}</div>
+                        </div>
+                        <div class="saved-task-actions">
+                            <button class="btn-delete-task" onclick="deleteSavedTask(event, ${i})">삭제</button>
+                        </div>
+                    </div>
+                `;
+            }
+            savedTaskList.innerHTML = html;
+        }
+
+        function selectSavedTask(index) {
+            selectedSavedTaskIndex = index;
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            const selectedTask = savedTasks[index];
+
+            // 선택된 작업 표시 업데이트
+            loadSavedTasks();
+
+            // 행위 목록 표시
+            const selectedActionList = document.getElementById('selectedActionList');
+            let html = '';
+            for (let i = 0; i < selectedTask.tasks.length; i++) {
+                const action = selectedTask.tasks[i];
+                const timeFromPrev = i === 0 ? 0 : (action.time - selectedTask.tasks[i-1].time);
+                
+                html += `
+                    <div class="action-item">
+                        <div class="task-item-command">${i + 1}. ${action.name}</div>
+                        <div>${action.description}</div>
+                        <div class="task-item-time">시간: ${action.time.toFixed(1)}초 (간격: ${timeFromPrev.toFixed(1)}초)</div>
+                    </div>
+                `;
+            }
+            selectedActionList.innerHTML = html;
+            document.getElementById('selectedTaskInfo').style.display = 'block';
+
+            // 버튼 활성화
+            document.getElementById('executeSavedBtn').disabled = false;
+            document.getElementById('deleteSelectedBtn').disabled = false;
+
+            showStatus(`"${selectedTask.name}" 작업 선택됨`, 'info');
+        }
+
+        function deleteSelectedTask() {
+            if (selectedSavedTaskIndex === -1) {
+                showStatus('삭제할 작업을 선택해주세요.', 'error');
+                return;
+            }
+
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            const taskName = savedTasks[selectedSavedTaskIndex].name;
+
+            if (confirm(`"${taskName}" 작업을 삭제하시겠습니까?`)) {
+                savedTasks.splice(selectedSavedTaskIndex, 1);
+                localStorage.setItem('saved_tasks', JSON.stringify(savedTasks));
+                
+                selectedSavedTaskIndex = -1;
+                document.getElementById('selectedTaskInfo').style.display = 'none';
+                document.getElementById('executeSavedBtn').disabled = true;
+                document.getElementById('deleteSelectedBtn').disabled = true;
+                
+                loadSavedTasks();
+                showStatus(`✓ "${taskName}" 작업이 삭제되었습니다.`, 'success');
+            }
+        }
+
+        function deleteSavedTask(event, index) {
+            event.stopPropagation(); // 클릭 이벤트 전파 방지
+            
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            const taskName = savedTasks[index].name;
+
+            if (confirm(`"${taskName}" 작업을 삭제하시겠습니까?`)) {
+                savedTasks.splice(index, 1);
+                localStorage.setItem('saved_tasks', JSON.stringify(savedTasks));
+                
+                if (selectedSavedTaskIndex === index) {
+                    selectedSavedTaskIndex = -1;
+                    document.getElementById('selectedTaskInfo').style.display = 'none';
+                    document.getElementById('executeSavedBtn').disabled = true;
+                    document.getElementById('deleteSelectedBtn').disabled = true;
+                }
+                
+                loadSavedTasks();
+                showStatus(`✓ "${taskName}" 작업이 삭제되었습니다.`, 'success');
+            }
+        }
+
+        function executeSelectedTask() {
+            if (selectedSavedTaskIndex === -1) {
+                showStatus('실행할 작업을 선택해주세요.', 'error');
+                return;
+            }
+
+            const creds = getCredentials();
+            if (!creds) return;
+
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            const selectedTask = savedTasks[selectedSavedTaskIndex];
+
+            showStatus(`"${selectedTask.name}" 작업 실행 시작...`, 'info');
+            
+            let taskIndex = 0;
+            
+            function executeNextTask() {
+                if (taskIndex >= selectedTask.tasks.length) {
+                    showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
+                    return;
+                }
+
+                const currentTask = selectedTask.tasks[taskIndex];
+                const nextTask = selectedTask.tasks[taskIndex + 1];
+                
+                // 현재 작업 실행
+                executeTaskCommand(currentTask, creds);
+                
+                taskIndex++;
+                
+                if (taskIndex < selectedTask.tasks.length) {
+                    // 다음 작업까지의 시간 간격 계산
+                    const timeDiff = (nextTask.time - currentTask.time) * 1000; // 밀리초 변환
+                    setTimeout(executeNextTask, timeDiff);
+                } else {
+                    showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
+                }
+            }
+            
+            executeNextTask();
+        }
+
+        // ==================== 기존 실행 함수 ====================
         function executeTask() {
             if (recordedTasks.length === 0) {
-                showStatus('실행할 작업이 없습니다.', 'error');
+                showStatus('실행할 행위가 없습니다.', 'error');
                 return;
             }
 
@@ -630,7 +1001,7 @@
             
             function executeNextTask() {
                 if (taskIndex >= recordedTasks.length) {
-                    showStatus('✓ 모든 작업 완료', 'success');
+                    showStatus('✓ 모든 행위 완료', 'success');
                     return;
                 }
 
@@ -647,7 +1018,7 @@
                     const timeDiff = (nextTask.time - currentTask.time) * 1000; // 밀리초 변환
                     setTimeout(executeNextTask, timeDiff);
                 } else {
-                    showStatus('✓ 모든 작업 완료', 'success');
+                    showStatus('✓ 모든 행위 완료', 'success');
                 }
             }
             
@@ -678,51 +1049,6 @@
                     remoteKeyDirect(keyMatch[1], creds);
                 }
             }
-        }
-
-        function clearTask() {
-            if (recordedTasks.length === 0) {
-                showStatus('삭제할 작업이 없습니다.', 'error');
-                return;
-            }
-
-            if (confirm('저장된 모든 작업을 삭제하시겠습니까?')) {
-                recordedTasks = [];
-                isRecording = false;
-                
-                document.getElementById('recordBtn').textContent = '🔴 기억 시작';
-                document.getElementById('recordBtn').classList.remove('stop');
-                document.getElementById('executeBtn').disabled = true;
-                document.getElementById('taskStatus').textContent = '준비됨';
-                document.getElementById('taskStatus').classList.remove('recording');
-                
-                updateTaskList();
-                showStatus('✓ 작업이 삭제되었습니다.', 'success');
-            }
-        }
-
-        function saveTask() {
-            if (recordedTasks.length === 0) {
-                showStatus('저장할 작업이 없습니다.', 'error');
-                return;
-            }
-
-            const taskName = prompt('작업 이름을 입력하세요:', '작업1');
-            if (!taskName) return;
-
-            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
-            savedTasks.push({
-                name: taskName,
-                tasks: JSON.parse(JSON.stringify(recordedTasks)),
-                savedDate: new Date().toLocaleString('ko-KR')
-            });
-
-            localStorage.setItem('saved_tasks', JSON.stringify(savedTasks));
-            showStatus(`✓ "${taskName}" 작업이 저장되었습니다.`, 'success');
-        }
-
-        function loadSavedTask() {
-            // 향후 저장된 작업 목록을 불러오는 기능 추가 가능
         }
 
         // ==================== API 관련 함수 ====================
