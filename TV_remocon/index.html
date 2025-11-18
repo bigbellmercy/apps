@@ -403,10 +403,38 @@
             margin-bottom: 5px;
             border-left: 3px solid #4ECDC4;
             color: #555;
+            transition: all 0.3s;
         }
         
         .action-item:last-child {
             margin-bottom: 0;
+        }
+
+        .action-item.current {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+            font-weight: 600;
+            color: #856404;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3) inset;
+            animation: highlightPulse 1s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { 
+                background-color: #fff3cd;
+                box-shadow: 0 0 10px rgba(255, 193, 7, 0.3) inset;
+            }
+            50% { 
+                background-color: #ffe082;
+                box-shadow: 0 0 15px rgba(255, 193, 7, 0.5) inset;
+            }
+        }
+
+        .action-item.completed {
+            background-color: #e8f5e9;
+            border-left-color: #4caf50;
+            color: #2e7d32;
+            opacity: 0.7;
         }
         
         .task-buttons {
@@ -658,6 +686,8 @@
         let recordedTasks = [];
         let recordStartTime = null;
         let selectedSavedTaskIndex = -1;
+        let isExecuting = false;
+        let currentActionIndex = -1;
 
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
@@ -776,8 +806,15 @@
                 const task = recordedTasks[i];
                 const timeFromPrev = i === 0 ? 0 : (task.time - recordedTasks[i-1].time);
                 
+                let actionClass = 'action-item';
+                if (isExecuting && i === currentActionIndex) {
+                    actionClass += ' current';
+                } else if (isExecuting && i < currentActionIndex) {
+                    actionClass += ' completed';
+                }
+                
                 html += `
-                    <div class="action-item">
+                    <div class="${actionClass}">
                         <div class="task-item-command">${i + 1}. ${task.name}</div>
                         <div>${task.description}</div>
                         <div class="task-item-time">시간: ${task.time.toFixed(1)}초 (간격: ${timeFromPrev.toFixed(1)}초)</div>
@@ -874,14 +911,34 @@
             loadSavedTasks();
 
             // 행위 목록 표시
+            updateSelectedActionList();
+
+            // 버튼 활성화
+            document.getElementById('executeSavedBtn').disabled = false;
+            document.getElementById('deleteSelectedBtn').disabled = false;
+
+            showStatus(`"${selectedTask.name}" 작업 선택됨`, 'info');
+        }
+
+        function updateSelectedActionList() {
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            const selectedTask = savedTasks[selectedSavedTaskIndex];
             const selectedActionList = document.getElementById('selectedActionList');
+            
             let html = '';
             for (let i = 0; i < selectedTask.tasks.length; i++) {
                 const action = selectedTask.tasks[i];
                 const timeFromPrev = i === 0 ? 0 : (action.time - selectedTask.tasks[i-1].time);
                 
+                let actionClass = 'action-item';
+                if (isExecuting && i === currentActionIndex) {
+                    actionClass += ' current';
+                } else if (isExecuting && i < currentActionIndex) {
+                    actionClass += ' completed';
+                }
+                
                 html += `
-                    <div class="action-item">
+                    <div class="${actionClass}">
                         <div class="task-item-command">${i + 1}. ${action.name}</div>
                         <div>${action.description}</div>
                         <div class="task-item-time">시간: ${action.time.toFixed(1)}초 (간격: ${timeFromPrev.toFixed(1)}초)</div>
@@ -890,12 +947,6 @@
             }
             selectedActionList.innerHTML = html;
             document.getElementById('selectedTaskInfo').style.display = 'block';
-
-            // 버튼 활성화
-            document.getElementById('executeSavedBtn').disabled = false;
-            document.getElementById('deleteSelectedBtn').disabled = false;
-
-            showStatus(`"${selectedTask.name}" 작업 선택됨`, 'info');
         }
 
         function deleteSelectedTask() {
@@ -957,13 +1008,20 @@
 
             showStatus(`"${selectedTask.name}" 작업 실행 시작...`, 'info');
             
+            isExecuting = true;
             let taskIndex = 0;
             
             function executeNextTask() {
                 if (taskIndex >= selectedTask.tasks.length) {
+                    isExecuting = false;
+                    currentActionIndex = -1;
+                    updateSelectedActionList();
                     showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
                     return;
                 }
+
+                currentActionIndex = taskIndex;
+                updateSelectedActionList();
 
                 const currentTask = selectedTask.tasks[taskIndex];
                 const nextTask = selectedTask.tasks[taskIndex + 1];
@@ -978,7 +1036,12 @@
                     const timeDiff = (nextTask.time - currentTask.time) * 1000; // 밀리초 변환
                     setTimeout(executeNextTask, timeDiff);
                 } else {
-                    showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
+                    setTimeout(() => {
+                        isExecuting = false;
+                        currentActionIndex = -1;
+                        updateSelectedActionList();
+                        showStatus(`✓ "${selectedTask.name}" 작업 완료`, 'success');
+                    }, 500);
                 }
             }
             
@@ -997,13 +1060,20 @@
 
             showStatus('작업 실행 시작...', 'info');
             
+            isExecuting = true;
             let taskIndex = 0;
             
             function executeNextTask() {
                 if (taskIndex >= recordedTasks.length) {
+                    isExecuting = false;
+                    currentActionIndex = -1;
+                    updateTaskList();
                     showStatus('✓ 모든 행위 완료', 'success');
                     return;
                 }
+
+                currentActionIndex = taskIndex;
+                updateTaskList();
 
                 const currentTask = recordedTasks[taskIndex];
                 const nextTask = recordedTasks[taskIndex + 1];
@@ -1018,7 +1088,12 @@
                     const timeDiff = (nextTask.time - currentTask.time) * 1000; // 밀리초 변환
                     setTimeout(executeNextTask, timeDiff);
                 } else {
-                    showStatus('✓ 모든 행위 완료', 'success');
+                    setTimeout(() => {
+                        isExecuting = false;
+                        currentActionIndex = -1;
+                        updateTaskList();
+                        showStatus('✓ 모든 행위 완료', 'success');
+                    }, 500);
                 }
             }
             
