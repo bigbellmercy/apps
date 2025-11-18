@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Samsung TV Remote Control</title>
+    <title>Samsung TV Remote Control with Task</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -167,6 +167,7 @@
         .btn-nav { background: linear-gradient(135deg, #AA96DA, #8B7DB8); }
         .btn-menu { background: linear-gradient(135deg, #FCBAD3, #FB9DC1); }
         .btn-home { background: linear-gradient(135deg, #A8D8EA, #7EC8E3); }
+        .btn-task { background: linear-gradient(135deg, #FFD93D, #FFC300); color: #333; }
         
         .remote-pad {
             display: flex;
@@ -204,6 +205,140 @@
             transform: translateY(0);
         }
         
+        .arrow-btn.recording {
+            background: linear-gradient(135deg, #FF6B6B, #FF5252);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .task-box {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 2px solid #FFD93D;
+        }
+        
+        .task-status {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .task-status.recording {
+            background-color: #FFD93D;
+            color: #333;
+            font-weight: 700;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .task-list {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .task-item {
+            font-size: 12px;
+            padding: 8px;
+            background-color: white;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            border-left: 3px solid #667eea;
+            color: #555;
+        }
+        
+        .task-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .task-item-command {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .task-item-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 3px;
+        }
+        
+        .task-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .task-buttons button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+        
+        .task-buttons button:active {
+            transform: scale(0.95);
+        }
+        
+        .task-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-record {
+            background: linear-gradient(135deg, #FF6B6B, #FF5252);
+        }
+        
+        .btn-record:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-record.stop {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+        
+        .btn-record.stop:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn-execute {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .btn-execute:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-clear-task {
+            background: linear-gradient(135deg, #f44336, #e53935);
+        }
+        
+        .btn-clear-task:hover:not(:disabled) {
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
+        }
+        
         .status {
             position: fixed;
             bottom: 20px;
@@ -233,6 +368,11 @@
             color: white;
         }
         
+        .status.info {
+            background-color: #2196F3;
+            color: white;
+        }
+        
         @keyframes slideUp {
             from {
                 transform: translateY(100px);
@@ -248,6 +388,7 @@
             .container { max-width: 100%; }
             .header h1 { font-size: 28px; }
             .control-btn { padding: 12px; font-size: 12px; }
+            .task-list { max-height: 120px; }
         }
     </style>
 </head>
@@ -271,6 +412,28 @@
             <div class="button-row">
                 <button class="save-btn" onclick="saveSettings()">저장하기</button>
                 <button class="clear-btn" onclick="clearSettings()">초기화</button>
+            </div>
+        </div>
+
+        <!-- 작업(Task) 섹션 -->
+        <div class="task-box">
+            <div class="section-title">📋 작업 기록</div>
+            
+            <div class="task-status" id="taskStatus">
+                준비됨
+            </div>
+
+            <div class="task-list" id="taskList">
+                <div style="text-align: center; color: #999; padding: 20px; font-size: 13px;">
+                    기억 버튼을 눌러 시작하세요
+                </div>
+            </div>
+
+            <div class="task-buttons">
+                <button class="btn-record" id="recordBtn" onclick="toggleRecording()">🔴 기억 시작</button>
+                <button class="btn-execute" id="executeBtn" onclick="executeTask()" disabled>▶️ 실행</button>
+                <button class="btn-clear-task" onclick="clearTask()">🗑️ 삭제</button>
+                <button class="control-btn btn-task" onclick="saveTask()">💾 저장</button>
             </div>
         </div>
 
@@ -336,10 +499,17 @@
     <div class="status" id="status"></div>
 
     <script>
+        // 작업 기록 관련 변수
+        let isRecording = false;
+        let recordedTasks = [];
+        let recordStartTime = null;
+
         window.addEventListener('DOMContentLoaded', function() {
             loadSettings();
+            loadSavedTask();
         });
 
+        // ==================== 설정 관련 함수 ====================
         function saveSettings() {
             const token = document.getElementById('accessToken').value.trim();
             const deviceId = document.getElementById('deviceId').value.trim();
@@ -372,6 +542,190 @@
             }
         }
 
+        // ==================== 작업(Task) 관련 함수 ====================
+        function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const executeBtn = document.getElementById('executeBtn');
+            const taskStatus = document.getElementById('taskStatus');
+
+            if (!isRecording) {
+                // 기억 시작
+                isRecording = true;
+                recordedTasks = [];
+                recordStartTime = Date.now();
+                
+                recordBtn.textContent = '⏹️ 기억 중지';
+                recordBtn.classList.add('stop');
+                executeBtn.disabled = true;
+                taskStatus.textContent = '🔴 기억 중...';
+                taskStatus.classList.add('recording');
+                
+                updateTaskList();
+                showStatus('기억 시작됨', 'info');
+            } else {
+                // 기억 중지
+                isRecording = false;
+                
+                recordBtn.textContent = '🔴 기억 시작';
+                recordBtn.classList.remove('stop');
+                executeBtn.disabled = recordedTasks.length === 0;
+                taskStatus.textContent = `${recordedTasks.length}개 작업 기록됨`;
+                taskStatus.classList.remove('recording');
+                
+                showStatus('기억 완료', 'success');
+            }
+        }
+
+        function recordTask(taskName, taskDescription) {
+            if (!isRecording) return;
+
+            const currentTime = Date.now();
+            const elapsedTime = (currentTime - recordStartTime) / 1000; // 초 단위
+            
+            recordedTasks.push({
+                name: taskName,
+                description: taskDescription,
+                time: Math.round(elapsedTime * 10) / 10 // 0.1초 분해능
+            });
+
+            updateTaskList();
+        }
+
+        function updateTaskList() {
+            const taskList = document.getElementById('taskList');
+            
+            if (recordedTasks.length === 0) {
+                taskList.innerHTML = '<div style="text-align: center; color: #999; padding: 20px; font-size: 13px;">기억 버튼을 눌러 시작하세요</div>';
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < recordedTasks.length; i++) {
+                const task = recordedTasks[i];
+                const timeFromPrev = i === 0 ? 0 : (task.time - recordedTasks[i-1].time);
+                
+                html += `
+                    <div class="task-item">
+                        <div class="task-item-command">${i + 1}. ${task.name}</div>
+                        <div>${task.description}</div>
+                        <div class="task-item-time">시간: ${task.time.toFixed(1)}초 (간격: ${timeFromPrev.toFixed(1)}초)</div>
+                    </div>
+                `;
+            }
+            taskList.innerHTML = html;
+        }
+
+        function executeTask() {
+            if (recordedTasks.length === 0) {
+                showStatus('실행할 작업이 없습니다.', 'error');
+                return;
+            }
+
+            const creds = getCredentials();
+            if (!creds) return;
+
+            showStatus('작업 실행 시작...', 'info');
+            
+            let taskIndex = 0;
+            
+            function executeNextTask() {
+                if (taskIndex >= recordedTasks.length) {
+                    showStatus('✓ 모든 작업 완료', 'success');
+                    return;
+                }
+
+                const currentTask = recordedTasks[taskIndex];
+                const nextTask = recordedTasks[taskIndex + 1];
+                
+                // 현재 작업 실행
+                executeTaskCommand(currentTask, creds);
+                
+                taskIndex++;
+                
+                if (taskIndex < recordedTasks.length) {
+                    // 다음 작업까지의 시간 간격 계산
+                    const timeDiff = (nextTask.time - currentTask.time) * 1000; // 밀리초 변환
+                    setTimeout(executeNextTask, timeDiff);
+                } else {
+                    showStatus('✓ 모든 작업 완료', 'success');
+                }
+            }
+            
+            executeNextTask();
+        }
+
+        function executeTaskCommand(task, creds) {
+            // 작업 이름으로 실제 명령 실행
+            if (task.name.includes('Power On')) {
+                sendCommandDirect('Power', 'on', creds);
+            } else if (task.name.includes('Power Off')) {
+                sendCommandDirect('Power', 'off', creds);
+            } else if (task.name.includes('volumeUp')) {
+                sendCommandDirect('volumeUp', null, creds);
+            } else if (task.name.includes('volumeDown')) {
+                sendCommandDirect('volumeDown', null, creds);
+            } else if (task.name.includes('mute')) {
+                sendCommandDirect('mute', null, creds);
+            } else if (task.name.includes('play')) {
+                sendCommandDirect('play', null, creds);
+            } else if (task.name.includes('pause')) {
+                sendCommandDirect('pause', null, creds);
+            } else if (task.name.includes('stop')) {
+                sendCommandDirect('stop', null, creds);
+            } else if (task.name.includes('remoteKey')) {
+                const keyMatch = task.name.match(/\(([^)]+)\)/);
+                if (keyMatch) {
+                    remoteKeyDirect(keyMatch[1], creds);
+                }
+            }
+        }
+
+        function clearTask() {
+            if (recordedTasks.length === 0) {
+                showStatus('삭제할 작업이 없습니다.', 'error');
+                return;
+            }
+
+            if (confirm('저장된 모든 작업을 삭제하시겠습니까?')) {
+                recordedTasks = [];
+                isRecording = false;
+                
+                document.getElementById('recordBtn').textContent = '🔴 기억 시작';
+                document.getElementById('recordBtn').classList.remove('stop');
+                document.getElementById('executeBtn').disabled = true;
+                document.getElementById('taskStatus').textContent = '준비됨';
+                document.getElementById('taskStatus').classList.remove('recording');
+                
+                updateTaskList();
+                showStatus('✓ 작업이 삭제되었습니다.', 'success');
+            }
+        }
+
+        function saveTask() {
+            if (recordedTasks.length === 0) {
+                showStatus('저장할 작업이 없습니다.', 'error');
+                return;
+            }
+
+            const taskName = prompt('작업 이름을 입력하세요:', '작업1');
+            if (!taskName) return;
+
+            const savedTasks = JSON.parse(localStorage.getItem('saved_tasks') || '[]');
+            savedTasks.push({
+                name: taskName,
+                tasks: JSON.parse(JSON.stringify(recordedTasks)),
+                savedDate: new Date().toLocaleString('ko-KR')
+            });
+
+            localStorage.setItem('saved_tasks', JSON.stringify(savedTasks));
+            showStatus(`✓ "${taskName}" 작업이 저장되었습니다.`, 'success');
+        }
+
+        function loadSavedTask() {
+            // 향후 저장된 작업 목록을 불러오는 기능 추가 가능
+        }
+
+        // ==================== API 관련 함수 ====================
         function getCredentials() {
             const token = document.getElementById('accessToken').value.trim();
             const deviceId = document.getElementById('deviceId').value.trim();
@@ -395,7 +749,10 @@
         function sendCommand(command, arg) {
             const creds = getCredentials();
             if (!creds) return;
+            sendCommandDirect(command, arg, creds);
+        }
 
+        function sendCommandDirect(command, arg, creds) {
             const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
             let body = {};
 
@@ -471,7 +828,10 @@
         function remoteKey(keyName) {
             const creds = getCredentials();
             if (!creds) return;
+            remoteKeyDirect(keyName, creds);
+        }
 
+        function remoteKeyDirect(keyName, creds) {
             const url = `https://api.smartthings.com/v1/devices/${creds.deviceId}/commands`;
             const body = {
                 commands: [{
@@ -498,6 +858,52 @@
             })
             .catch(error => console.log('오류: ' + error.message));
         }
+
+        // ==================== 모든 버튼 클릭 이벤트에 기억 기능 추가 ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 원본 함수들을 래핑하여 기억 기능 추가
+            const originalSendCommand = window.sendCommand;
+            window.sendCommand = function(command, arg) {
+                if (isRecording) {
+                    let description = command;
+                    if (command === 'Power') {
+                        recordTask(`Power (${arg})`, `전원 ${arg === 'on' ? '켜기' : '끄기'}`);
+                    } else if (command === 'volumeUp') {
+                        recordTask('volumeUp', '볼륨 올리기');
+                    } else if (command === 'volumeDown') {
+                        recordTask('volumeDown', '볼륨 내리기');
+                    } else if (command === 'mute') {
+                        recordTask('mute', '음소거');
+                    } else if (command === 'play') {
+                        recordTask('play', '재생');
+                    } else if (command === 'pause') {
+                        recordTask('pause', '일시정지');
+                    } else if (command === 'stop') {
+                        recordTask('stop', '정지');
+                    }
+                }
+                return originalSendCommand(command, arg);
+            };
+
+            const originalRemoteKey = window.remoteKey;
+            window.remoteKey = function(keyName) {
+                if (isRecording) {
+                    const keyDescriptions = {
+                        'UP': '위 화살표',
+                        'DOWN': '아래 화살표',
+                        'LEFT': '왼쪽 화살표',
+                        'RIGHT': '오른쪽 화살표',
+                        'OK': '확인',
+                        'BACK': '뒤로',
+                        'MENU': '메뉴',
+                        'HOME': '홈',
+                        'EXIT': '종료'
+                    };
+                    recordTask(`remoteKey(${keyName})`, keyDescriptions[keyName] || keyName);
+                }
+                return originalRemoteKey(keyName);
+            };
+        });
     </script>
 </body>
 </html>
